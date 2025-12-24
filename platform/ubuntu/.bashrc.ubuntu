@@ -1,0 +1,44 @@
+# Ubuntu-specific bash configuration
+
+# ============================================================================
+# Environment Variables
+# ============================================================================
+
+# Trash directory for safe delete
+export TRASH_DIR="$HOME/.local/share/Trash/files"
+
+# ============================================================================
+# Ubuntu-specific aliases
+# ============================================================================
+
+# Package management aliases
+alias update='sudo apt-get update'
+alias upgrade='sudo apt-get upgrade'
+alias install='sudo apt-get install'
+alias remove='sudo apt-get remove'
+alias autoremove='sudo apt-get autoremove'
+
+# System information
+alias sysinfo='uname -a && lsb_release -a'
+
+# ============================================================================
+# Ubuntu-specific environment
+# ============================================================================
+
+# Enable color support for ls
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# ============================================================================
+# Ubuntu-specific PATH
+# ============================================================================
+
+# Add snap bin to PATH if it exists
+if [ -d /snap/bin ]; then
+    export PATH="/snap/bin:$PATH"
+fi

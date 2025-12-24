@@ -1,0 +1,20 @@
+[core]
+	editor = vim
+	autocrlf = input
+
+[color]
+	ui = auto
+
+[alias]
+	st = status
+	co = checkout
+	br = branch
+	ci = commit
+	df = diff
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+
+[pull]
+	rebase = false
+
+[init]
+	defaultBranch = main
