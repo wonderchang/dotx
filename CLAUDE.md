@@ -21,7 +21,7 @@ User → bootstrap.sh → platform/{macos,ubuntu}/setup.sh → {packages, config
 1. **Single Entry Point**: `bootstrap.sh` detects the platform and delegates to platform-specific setup scripts
 2. **Common Configs**: Cross-platform dotfiles (`.vimrc`, `.gitconfig`, `.tmux.conf`) stored in `common/`
 3. **Platform Separation**: macOS and Ubuntu have separate directories with platform-specific logic
-4. **Shared Utilities**: Common functions (platform detection, symlink management) in `utils/`
+4. **Shared Utilities**: Common functions (platform detection, symlink management, shell switching) in `utils/`
 5. **Two-Mode Interface**: `--install` and `--uninstall` with `--dry-run` for safe preview
 6. **Pure Bash**: No Makefile, all logic in shell scripts
 
@@ -124,6 +124,7 @@ dotx/
 │       └── .bashrc.ubuntu         # Ubuntu-specific bash configuration
 └── utils/                          # Shared utilities
     ├── detect.sh                  # Platform detection
+    ├── shell.sh                   # Shell detection and switching
     └── symlink.sh                 # Symlink management with auto-backup
 ```
 
@@ -249,6 +250,11 @@ install_macos() {
   fi
 
   if should_install_component "bash"; then
+    # Install modern bash via Homebrew (macOS ships with old bash 3.2)
+    install_brew_package "bash"
+    # Switch default shell to Homebrew bash (macOS defaults to zsh)
+    switch_to_bash
+    # Install bash configuration
     bash common/bash/setup.sh install
     # Platform-specific bash config
     create_symlink "$SCRIPT_DIR/.bashrc.macos" "$HOME/.bashrc.local"
@@ -563,6 +569,38 @@ remove_symlink() {
 - **No Unnecessary Operations**: Returns early if symlink is already correct, avoiding filesystem churn
 - **Clear Feedback**: Distinct messages for "already correct" (✓), "updating", "creating", and "backing up"
 
+**utils/shell.sh**:
+```bash
+get_current_shell() {
+  # Get user's default shell from /etc/passwd
+  dscl . -read ~/ UserShell | awk '{print $2}'
+}
+
+switch_to_bash() {
+  # On macOS, use Homebrew bash (required to be installed first)
+  # This gives us modern bash (5.x) instead of old system bash (3.2)
+  # On Linux, use system bash
+
+  # Checks if already using target bash
+  # Adds bash to /etc/shells if needed
+  # Changes default shell via chsh
+  # Supports dry-run mode
+}
+
+restore_shell() {
+  # Restores default shell to specified path (e.g., /bin/zsh)
+  # Used during bash uninstall on macOS
+  # Supports dry-run mode
+}
+```
+
+**Key Features**:
+- **Platform-Aware**: Uses Homebrew bash on macOS, system bash on Linux
+- **Modern Bash**: Installs bash 5.x on macOS (system bash is 3.2 from 2007)
+- **Safe Switching**: Ensures bash is in /etc/shells before changing default shell
+- **User Notification**: Prompts for password when needed, notifies user to restart terminal
+- **Dry-Run Support**: Previews shell changes without applying them
+
 **Environment Variables**:
 - `DRY_RUN`: Set to "true" to preview operations without making changes. Exported by bootstrap.sh and available to all child scripts.
 
@@ -670,9 +708,19 @@ fi
   - Used to install packages
 
 - **Packages** (via Homebrew):
+  - **bash** (conditionally installed with bash component)
+    - Modern bash 5.x (macOS system bash is 3.2 from 2007)
+    - Installed to `/opt/homebrew/bin/bash` or `/usr/local/bin/bash`
   - tmux (conditionally installed with tmux component)
   - pyenv (optional, package-only component)
   - pipx (optional, package-only component)
+
+- **Shell Switching** (for bash component):
+  - Automatically switches default shell from zsh to Homebrew bash
+  - Adds bash to `/etc/shells` if needed
+  - Requires password for `chsh` command
+  - **Requires terminal restart** for shell change to take effect
+  - Uninstall restores shell back to zsh
 
 - **Platform-Specific Bash Config**:
   - `~/.bashrc.local` → `platform/macos/.bashrc.macos` (Homebrew setup, macOS aliases, nvm)
@@ -1010,10 +1058,15 @@ esac
 - **Prerequisites**:
   - macOS: Automatically installs Homebrew if needed
   - Ubuntu: Requires `apt-get` (standard on Ubuntu/Debian)
+- **Shell Switching** (bash component on macOS):
+  - Requires password for `chsh` command to switch default shell
+  - **Requires terminal restart or logout/login** for shell change to take effect
+  - macOS users will switch from zsh → Homebrew bash (5.x)
 - **Versions**:
   - vim-plug: 0.14.0
   - bash-git-prompt: 2.7.1
   - nvm: 0.40.1
+  - bash (macOS via Homebrew): Latest 5.x
 
 ## Quick Reference
 

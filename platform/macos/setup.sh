@@ -7,8 +7,9 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Source utilities for bash setup
+# Source utilities
 source "$PROJECT_ROOT/utils/symlink.sh"
+source "$PROJECT_ROOT/utils/shell.sh"
 
 # Component list to install/uninstall
 COMPONENTS=()
@@ -108,9 +109,21 @@ install_macos() {
 
   if should_install_component "bash"; then
     echo "=== Bash ==="
+
+    # 1. Install modern bash via Homebrew (macOS ships with old bash 3.2)
+    echo "Installing bash via Homebrew..."
+    install_brew_package "bash"
+    echo ""
+
+    # 2. Switch default shell to Homebrew bash (macOS defaults to zsh)
+    echo "=== Switching Default Shell to Bash ==="
+    switch_to_bash
+    echo ""
+
+    # 3. Install bash configuration
     bash "$PROJECT_ROOT/common/bash/setup.sh" install
 
-    # Setup platform-specific bash configuration
+    # 4. Setup platform-specific bash configuration
     echo "=== macOS-Specific Bash Configuration ==="
     create_symlink "$SCRIPT_DIR/.bashrc.macos" "$HOME/.bashrc.local"
     echo "✓ macOS bash configuration linked"
@@ -173,11 +186,23 @@ uninstall_macos() {
 
   if should_install_component "bash"; then
     echo "=== Bash ==="
+
+    # 1. Restore shell to zsh (macOS default)
+    echo "=== Restoring Default Shell to Zsh ==="
+    restore_shell "/bin/zsh"
+    echo ""
+
+    # 2. Remove bash configurations
     bash "$PROJECT_ROOT/common/bash/setup.sh" uninstall
 
-    # Remove platform-specific bash configuration
+    # 3. Remove platform-specific bash configuration
     echo "=== macOS-Specific Bash Uninstall ==="
     remove_symlink "$HOME/.bashrc.local"
+    echo ""
+
+    # 4. Uninstall Homebrew bash
+    echo "Uninstalling Homebrew bash..."
+    uninstall_brew_package "bash"
     echo ""
   fi
 
