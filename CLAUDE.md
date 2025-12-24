@@ -38,7 +38,7 @@ User → bootstrap.sh → platform/{macos,ubuntu}/setup.sh → {packages, config
 ./bootstrap.sh --install vim git
 ./bootstrap.sh --install bash
 ./bootstrap.sh vim tmux  # --install is default mode
-./bootstrap.sh pyenv pipx  # Install pyenv and pipx
+./bootstrap.sh pyenv pipx  # Install Python tools
 
 # Remove everything (dotfiles and packages)
 ./bootstrap.sh --uninstall
@@ -67,7 +67,7 @@ The following components can be selectively installed or uninstalled:
 - `bash` - Bash shell configuration with bash-git-prompt
 - `nvm` - Node Version Manager
 - `pyenv` - Python version manager
-- `pipx` - Python application installer (package only, no configuration)
+- `pipx` - Python application installer
 - `all` - All components (default if none specified)
 
 ### Platform-Specific (Advanced)
@@ -108,6 +108,8 @@ dotx/
 │   │   └── setup.sh               # NVM setup (installation)
 │   ├── pyenv/
 │   │   └── setup.sh               # pyenv setup (installation)
+│   ├── pipx/
+│   │   └── setup.sh               # pipx setup (installation)
 │   ├── vim/
 │   │   ├── .vimrc                 # Vim configuration
 │   │   └── setup.sh               # Vim setup (symlinks + vim-plug)
@@ -150,8 +152,7 @@ bootstrap.sh [--install|--uninstall] [--dry-run] [components...]
   ↓
   5. Platform setup orchestrates (for each component):
      - Install package (inline, if needed) - respects DRY_RUN
-     - Setup tool configuration (calls common/{vim,git,tmux,bash,nvm,pyenv}/setup.sh) - respects DRY_RUN
-     - Package-only components (pipx) install package without configuration - respects DRY_RUN
+     - Setup tool configuration (calls common/{vim,git,tmux,bash,nvm,pyenv,pipx}/setup.sh) - respects DRY_RUN
 ```
 
 **Key Architecture Changes**:
@@ -271,7 +272,7 @@ install_macos() {
   fi
 
   if should_install_component "pipx"; then
-    install_brew_package "pipx"      # Package-only component
+    bash common/pipx/setup.sh install
   fi
 }
 ```
@@ -384,7 +385,7 @@ install_ubuntu() {
   fi
 
   if should_install_component "pipx"; then
-    install_apt_package "pipx"       # Package-only component
+    bash common/pipx/setup.sh install
   fi
 }
 ```
@@ -459,6 +460,13 @@ Each tool in `common/` has its own setup script that handles platform-independen
 - Downloads and installs to `~/.pyenv` via official pyenv-installer (dry-run supported)
 - pyenv is loaded from `common/bash/.bashrc` (same path `$HOME/.pyenv` on both macOS and Ubuntu)
 - Uninstall removes `~/.pyenv` directory (dry-run supported)
+
+**common/pipx/setup.sh**:
+- Installs pipx (Python Application Installer) via pip (dry-run supported)
+- Installs to `~/.local/bin` via `python3 -m pip install --user pipx` (dry-run supported)
+- Runs `pipx ensurepath` to ensure PATH is configured
+- pipx PATH is set in `common/bash/.bashrc` (same path `$HOME/.local/bin` on both macOS and Ubuntu)
+- Uninstall removes pipx via pip (dry-run supported)
 
 **common/tmux/setup.sh**:
 - Creates symlinks (dry-run supported):
@@ -666,6 +674,7 @@ fi
 - ✅ `common/bash/setup.sh` - bash-git-prompt installation
 - ✅ `common/nvm/setup.sh` - nvm installation
 - ✅ `common/pyenv/setup.sh` - pyenv installation
+- ✅ `common/pipx/setup.sh` - pipx installation
 
 ## What Gets Installed
 
@@ -708,7 +717,9 @@ fi
   - Optional, can be selectively installed
 
 - **pipx** (Python Application Installer):
-  - Package-only component (no configuration files)
+  - Installed via pip (`python3 -m pip install --user pipx`)
+  - Installed to `~/.local/bin`
+  - PATH configured in `common/bash/.bashrc`
   - Optional, can be selectively installed
 
 ### macOS-Specific
@@ -722,7 +733,6 @@ fi
     - Modern bash 5.x (macOS system bash is 3.2 from 2007)
     - Installed to `/opt/homebrew/bin/bash` or `/usr/local/bin/bash`
   - tmux (conditionally installed with tmux component)
-  - pipx (optional, package-only component)
 
 - **Shell Switching** (for bash component):
   - Automatically switches default shell from zsh to Homebrew bash
@@ -743,7 +753,6 @@ fi
   - vim (conditionally installed with vim component)
   - tmux (conditionally installed with tmux component)
   - git (conditionally installed with git component)
-  - pipx (optional, package-only component)
 
 - **Platform-Specific Bash Config**:
   - `~/.bashrc.local` → `platform/ubuntu/.bashrc.ubuntu` (APT aliases, dircolors, snap PATH)
@@ -878,7 +887,9 @@ Update help text in `bootstrap.sh` and component list in `CLAUDE.md`.
 
 ## Adding Package-Only Components (No Configuration)
 
-To add components that only need package installation without configuration files (like `pyenv`, `pipx`):
+To add components that only need package installation without configuration files or setup scripts (like `jq`, `curl`, etc.):
+
+**Note**: Previously `pyenv` and `pipx` were package-only components, but they now have dedicated setup scripts following the NVM pattern for better cross-platform consistency.
 
 ### 1. Update Bootstrap.sh
 
@@ -1083,7 +1094,6 @@ esac
 | Install everything | `./bootstrap.sh` or `./bootstrap.sh --install` |
 | Install specific components | `./bootstrap.sh --install vim git` |
 | Install single component | `./bootstrap.sh vim` |
-| Install package-only component | `./bootstrap.sh pipx` |
 | Preview install (dry-run) | `./bootstrap.sh --dry-run` |
 | Preview specific install | `./bootstrap.sh --dry-run --install vim git` |
 | Remove everything | `./bootstrap.sh --uninstall` |

@@ -142,9 +142,7 @@ install_macos() {
   fi
 
   if should_install_component "pipx"; then
-    echo "=== Pipx ==="
-    install_brew_package "pipx"
-    echo "✓ pipx installed (no configuration needed)"
+    bash "$PROJECT_ROOT/common/pipx/setup.sh" install
     echo ""
   fi
 
@@ -216,8 +214,7 @@ uninstall_macos() {
   fi
 
   if should_install_component "pipx"; then
-    echo "=== Pipx ==="
-    uninstall_brew_package "pipx"
+    bash "$PROJECT_ROOT/common/pipx/setup.sh" uninstall
     echo ""
   fi
 
