@@ -501,26 +501,37 @@ create_symlink() {
   local source="$1"
   local target="$2"
 
-  # 1. Auto-backup existing files (with timestamp)
-  if [ -e "$target" ] && [ ! -L "$target" ]; then
+  # 1. Check if symlink already exists and is correct (idempotent check)
+  if [ -L "$target" ]; then
+    local current_source=$(readlink "$target")
+
+    if [ "$current_source" = "$source" ]; then
+      echo "  ✓ Symlink already correct: $target → $source"
+      return 0  # Skip unnecessary work - truly idempotent!
+    else
+      # Symlink exists but points to wrong source - needs update
+      if [ "${DRY_RUN:-false}" = "true" ]; then
+        echo "  [DRY-RUN] Would update symlink: $target"
+        echo "      Current: $target → $current_source"
+        echo "      New:     $target → $source"
+      else
+        echo "  Updating symlink: $target"
+        echo "      Old: $current_source → New: $source"
+        rm "$target"
+      fi
+    fi
+  # 2. Backup existing regular file (not a symlink)
+  elif [ -e "$target" ]; then
     local backup="$target.backup.$(date +%Y%m%d_%H%M%S)"
     if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "  [DRY-RUN] Would backup: $target → $backup"
+      echo "  [DRY-RUN] Would backup existing file: $target → $backup"
     else
+      echo "  Backing up existing file: $target → $backup"
       mv "$target" "$backup"
     fi
   fi
 
-  # 2. Remove old symlinks
-  if [ -L "$target" ]; then
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "  [DRY-RUN] Would remove existing symlink: $target"
-    else
-      rm "$target"
-    fi
-  fi
-
-  # 3. Create new symlink
+  # 3. Create new symlink (only if we didn't return early)
   if [ "${DRY_RUN:-false}" = "true" ]; then
     echo "  [DRY-RUN] Would create symlink: $target → $source"
   else
@@ -545,6 +556,12 @@ remove_symlink() {
   fi
 }
 ```
+
+**Key Features**:
+- **Truly Idempotent**: Checks if symlink already points to correct source before doing any work
+- **Smart Updates**: Detects when symlink exists but points to wrong source, shows old → new transition
+- **No Unnecessary Operations**: Returns early if symlink is already correct, avoiding filesystem churn
+- **Clear Feedback**: Distinct messages for "already correct" (✓), "updating", "creating", and "backing up"
 
 **Environment Variables**:
 - `DRY_RUN`: Set to "true" to preview operations without making changes. Exported by bootstrap.sh and available to all child scripts.
@@ -695,9 +712,11 @@ Existing files are automatically backed up before symlinking:
 - `--uninstall`: Removes dotfiles, plugins, AND packages (complete removal)
 
 ### Idempotent
-- Safe to run multiple times
+- Safe to run multiple times without side effects
+- **Smart symlink checking**: Detects when symlinks already point to correct source and skips unnecessary work
 - Checks for existing installations before proceeding
 - Won't overwrite or duplicate installations
+- No filesystem operations when configuration is already correct
 
 ## Platform Support
 
@@ -1050,6 +1069,19 @@ esac
 3. **Run actual installation** after verification:
    ```bash
    ./bootstrap.sh
+   ```
+
+4. **Safe to re-run** - The tool is truly idempotent:
+   ```bash
+   ./bootstrap.sh  # First run: creates symlinks
+   ./bootstrap.sh  # Second run: detects everything is correct, skips work
+   ```
+
+   Output on second run:
+   ```
+   ✓ Symlink already correct: /home/user/.vimrc → /path/to/dotx/common/vim/.vimrc
+   ✓ vim-plug already installed
+   ✓ tmux already installed
    ```
 
 ### Selective Installation
