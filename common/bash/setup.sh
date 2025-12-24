@@ -28,25 +28,33 @@ install_bash_setup() {
   if [ -d "$BASH_GIT_PROMPT_DIR" ]; then
     echo "✓ bash-git-prompt already installed"
   else
-    echo "Installing bash-git-prompt ${BASH_GIT_PROMPT_VERSION}..."
-    local tmp_src="bash-git-prompt-${BASH_GIT_PROMPT_VERSION}"
-    local tmp_tarball="${tmp_src}.tar.gz"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install bash-git-prompt ${BASH_GIT_PROMPT_VERSION} from GitHub"
+    else
+      echo "Installing bash-git-prompt ${BASH_GIT_PROMPT_VERSION}..."
+      local tmp_src="bash-git-prompt-${BASH_GIT_PROMPT_VERSION}"
+      local tmp_tarball="${tmp_src}.tar.gz"
 
-    curl -L -o "$tmp_tarball" \
-      "https://github.com/magicmonty/bash-git-prompt/archive/${BASH_GIT_PROMPT_VERSION}.tar.gz"
-    tar zxf "$tmp_tarball"
-    mkdir -p "$BASH_GIT_PROMPT_DIR"
-    rsync -a "${tmp_src}/" "$BASH_GIT_PROMPT_DIR/"
-    rm -rf "$tmp_src" "$tmp_tarball"
+      curl -L -o "$tmp_tarball" \
+        "https://github.com/magicmonty/bash-git-prompt/archive/${BASH_GIT_PROMPT_VERSION}.tar.gz"
+      tar zxf "$tmp_tarball"
+      mkdir -p "$BASH_GIT_PROMPT_DIR"
+      rsync -a "${tmp_src}/" "$BASH_GIT_PROMPT_DIR/"
+      rm -rf "$tmp_src" "$tmp_tarball"
 
-    echo "✓ bash-git-prompt installed"
+      echo "✓ bash-git-prompt installed"
+    fi
   fi
 
   # 3. Install custom theme if it exists
   if [ -f "$SCRIPT_DIR/WonderChang.bgptheme" ]; then
-    echo "Installing WonderChang theme..."
-    create_symlink "$SCRIPT_DIR/WonderChang.bgptheme" "$BASH_GIT_PROMPT_DIR/themes/WonderChang.bgptheme"
-    echo "✓ WonderChang theme installed"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install WonderChang theme"
+    else
+      echo "Installing WonderChang theme..."
+      create_symlink "$SCRIPT_DIR/WonderChang.bgptheme" "$BASH_GIT_PROMPT_DIR/themes/WonderChang.bgptheme"
+      echo "✓ WonderChang theme installed"
+    fi
   fi
 
   echo ""
@@ -66,8 +74,12 @@ uninstall_bash_setup() {
 
   # 3. Remove bash-git-prompt
   if [ -d "$BASH_GIT_PROMPT_DIR" ]; then
-    rm -rf "$BASH_GIT_PROMPT_DIR"
-    echo "  Removed bash-git-prompt"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove bash-git-prompt"
+    else
+      rm -rf "$BASH_GIT_PROMPT_DIR"
+      echo "  Removed bash-git-prompt"
+    fi
   fi
 
   echo ""

@@ -35,6 +35,13 @@ install_homebrew() {
     return 0
   fi
 
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Homebrew not found - would install via official installer"
+    echo "[DRY-RUN] Would run: curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+    echo ""
+    return 0
+  fi
+
   echo "Homebrew not found - installing..."
   echo ""
 

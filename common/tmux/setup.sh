@@ -21,13 +21,17 @@ install_tmux_setup() {
 
   # Install powerline fonts (key dependency for tmux)
   echo ""
-  echo "Installing powerline fonts..."
-  local tmp_dir=$(mktemp -d)
-  git clone https://github.com/powerline/fonts.git "$tmp_dir/fonts"
-  cd "$tmp_dir/fonts" && ./install.sh
-  cd "$HOME"
-  rm -rf "$tmp_dir"
-  echo "✓ Powerline fonts installed"
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would install powerline fonts from GitHub"
+  else
+    echo "Installing powerline fonts..."
+    local tmp_dir=$(mktemp -d)
+    git clone https://github.com/powerline/fonts.git "$tmp_dir/fonts"
+    cd "$tmp_dir/fonts" && ./install.sh
+    cd "$HOME"
+    rm -rf "$tmp_dir"
+    echo "✓ Powerline fonts installed"
+  fi
   echo ""
 }
 
@@ -40,13 +44,17 @@ uninstall_tmux_setup() {
 
   # Uninstall powerline fonts
   echo ""
-  echo "Uninstalling powerline fonts..."
-  local tmp_dir=$(mktemp -d)
-  git clone https://github.com/powerline/fonts.git "$tmp_dir/fonts"
-  cd "$tmp_dir/fonts" && ./uninstall.sh
-  cd "$HOME"
-  rm -rf "$tmp_dir"
-  echo "✓ Powerline fonts uninstalled"
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would uninstall powerline fonts"
+  else
+    echo "Uninstalling powerline fonts..."
+    local tmp_dir=$(mktemp -d)
+    git clone https://github.com/powerline/fonts.git "$tmp_dir/fonts"
+    cd "$tmp_dir/fonts" && ./uninstall.sh
+    cd "$HOME"
+    rm -rf "$tmp_dir"
+    echo "✓ Powerline fonts uninstalled"
+  fi
   echo ""
 }
 

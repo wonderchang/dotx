@@ -3,11 +3,12 @@
 # Main entry point for dotfiles setup
 #
 # Usage:
-#   ./bootstrap.sh [--install|--uninstall] [components...]
+#   ./bootstrap.sh [--install|--uninstall] [--dry-run] [components...]
 #
 # Modes:
 #   --install   Install dotfiles and packages (default)
 #   --uninstall Remove dotfiles and packages
+#   --dry-run   Preview changes without applying them
 #
 # Components:
 #   vim, git, tmux, bash, nvm (or 'all' for everything)
@@ -25,7 +26,8 @@ source "$SCRIPT_DIR/utils/detect.sh"
 
 main() {
   local MODE="$1"
-  shift
+  local DRY_RUN="$2"
+  shift 2
   local COMPONENTS=("$@")
 
   # Detect platform
@@ -37,6 +39,9 @@ main() {
   echo "========================================"
   echo "  Platform: $PLATFORM"
   echo "  Mode: $MODE"
+  if [ "$DRY_RUN" = "true" ]; then
+    echo "  Dry Run: ENABLED (no changes will be made)"
+  fi
   if [ ${#COMPONENTS[@]} -gt 0 ]; then
     echo "  Components: ${COMPONENTS[*]}"
   else
@@ -44,6 +49,9 @@ main() {
   fi
   echo "========================================"
   echo ""
+
+  # Export DRY_RUN for child scripts
+  export DRY_RUN
 
   # Delegate to platform-specific setup
   case "$PLATFORM" in
@@ -66,6 +74,7 @@ main() {
 # ============================================================================
 
 MODE="install"
+DRY_RUN="false"
 COMPONENTS=()
 
 # Parse arguments
@@ -79,12 +88,17 @@ while [[ $# -gt 0 ]]; do
       MODE="uninstall"
       shift
       ;;
+    --dry-run)
+      DRY_RUN="true"
+      shift
+      ;;
     -h|--help)
-      echo "Usage: $0 [--install|--uninstall] [components...]"
+      echo "Usage: $0 [--install|--uninstall] [--dry-run] [components...]"
       echo ""
       echo "Modes:"
       echo "  --install   Install dotfiles and packages (default)"
       echo "  --uninstall Remove dotfiles and packages"
+      echo "  --dry-run   Preview changes without applying them"
       echo ""
       echo "Components (optional):"
       echo "  vim         Vim editor with vim-plug"
@@ -97,12 +111,14 @@ while [[ $# -gt 0 ]]; do
       echo "  all         All components (default if none specified)"
       echo ""
       echo "Examples:"
-      echo "  $0                    # Install everything"
-      echo "  $0 --install vim git  # Install only vim and git"
-      echo "  $0 --install bash     # Install only bash"
-      echo "  $0 --install pyenv    # Install only pyenv"
-      echo "  $0 --uninstall vim    # Uninstall only vim"
-      echo "  $0 --uninstall        # Uninstall everything"
+      echo "  $0                         # Install everything"
+      echo "  $0 --dry-run               # Preview installation"
+      echo "  $0 --install vim git       # Install only vim and git"
+      echo "  $0 --install bash          # Install only bash"
+      echo "  $0 --install pyenv         # Install only pyenv"
+      echo "  $0 --dry-run --install vim # Preview vim installation"
+      echo "  $0 --uninstall vim         # Uninstall only vim"
+      echo "  $0 --uninstall             # Uninstall everything"
       exit 0
       ;;
     vim|git|tmux|bash|nvm|pyenv|pipx|all)
@@ -111,7 +127,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "Unknown option or component: $1"
-      echo "Usage: $0 [--install|--uninstall] [components...]"
+      echo "Usage: $0 [--install|--uninstall] [--dry-run] [components...]"
       echo "Run '$0 --help' for more information"
       exit 1
       ;;
@@ -119,4 +135,4 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Execute
-main "$MODE" "${COMPONENTS[@]}"
+main "$MODE" "$DRY_RUN" "${COMPONENTS[@]}"

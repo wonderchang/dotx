@@ -32,18 +32,26 @@ install_vim_setup() {
 
   # Install vim-plug if not present
   if [ ! -f "$VIM_PLUG" ]; then
-    echo "Installing vim-plug..."
-    curl -fLo "$VIM_PLUG" --create-dirs \
-      "https://raw.githubusercontent.com/junegunn/vim-plug/${VIM_PLUG_VERSION}/plug.vim"
-    echo "✓ vim-plug installed"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install vim-plug from GitHub"
+    else
+      echo "Installing vim-plug..."
+      curl -fLo "$VIM_PLUG" --create-dirs \
+        "https://raw.githubusercontent.com/junegunn/vim-plug/${VIM_PLUG_VERSION}/plug.vim"
+      echo "✓ vim-plug installed"
+    fi
   else
     echo "✓ vim-plug already installed"
   fi
 
   # 3. Install plugins
-  echo "Installing vim plugins..."
-  vim -c 'PlugInstall' -c 'qa!' || true
-  echo "✓ Vim plugins installed"
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would install vim plugins via PlugInstall"
+  else
+    echo "Installing vim plugins..."
+    vim -c 'PlugInstall' -c 'qa!' || true
+    echo "✓ Vim plugins installed"
+  fi
   echo ""
 }
 
@@ -55,12 +63,19 @@ uninstall_vim_setup() {
 
   # 2. Remove vim-plug and plugins
   if [ -d "$HOME/.vim" ]; then
-    [ -f "$HOME/.vim/autoload/plug.vim" ] && rm -f "$HOME/.vim/autoload/plug.vim" && echo "  Removed vim-plug"
-    [ -d "$HOME/.vim/plugged" ] && rm -rf "$HOME/.vim/plugged" && echo "  Removed vim plugins"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      [ -f "$HOME/.vim/autoload/plug.vim" ] && echo "  [DRY-RUN] Would remove vim-plug"
+      [ -d "$HOME/.vim/plugged" ] && echo "  [DRY-RUN] Would remove vim plugins"
+      [ -d "$HOME/.vim/autoload" ] && echo "  [DRY-RUN] Would clean up autoload directory"
+      [ -d "$HOME/.vim" ] && echo "  [DRY-RUN] Would clean up .vim directory"
+    else
+      [ -f "$HOME/.vim/autoload/plug.vim" ] && rm -f "$HOME/.vim/autoload/plug.vim" && echo "  Removed vim-plug"
+      [ -d "$HOME/.vim/plugged" ] && rm -rf "$HOME/.vim/plugged" && echo "  Removed vim plugins"
 
-    # Clean up empty directories
-    [ -d "$HOME/.vim/autoload" ] && [ -z "$(ls -A "$HOME/.vim/autoload")" ] && rmdir "$HOME/.vim/autoload"
-    [ -d "$HOME/.vim" ] && [ -z "$(ls -A "$HOME/.vim")" ] && rmdir "$HOME/.vim"
+      # Clean up empty directories
+      [ -d "$HOME/.vim/autoload" ] && [ -z "$(ls -A "$HOME/.vim/autoload")" ] && rmdir "$HOME/.vim/autoload"
+      [ -d "$HOME/.vim" ] && [ -z "$(ls -A "$HOME/.vim")" ] && rmdir "$HOME/.vim"
+    fi
   fi
 
   echo ""

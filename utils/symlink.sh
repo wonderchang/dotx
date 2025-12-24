@@ -18,18 +18,30 @@ create_symlink() {
   # Backup existing file if it exists and is not a symlink
   if [ -e "$target" ] && [ ! -L "$target" ]; then
     local backup="$target.backup.$(date +%Y%m%d_%H%M%S)"
-    echo "  Backing up existing file: $target → $backup"
-    mv "$target" "$backup"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would backup existing file: $target → $backup"
+    else
+      echo "  Backing up existing file: $target → $backup"
+      mv "$target" "$backup"
+    fi
   fi
 
   # Remove existing symlink if it exists
   if [ -L "$target" ]; then
-    rm "$target"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove existing symlink: $target"
+    else
+      rm "$target"
+    fi
   fi
 
   # Create symlink
-  ln -s "$source" "$target"
-  echo "  Created symlink: $target → $source"
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "  [DRY-RUN] Would create symlink: $target → $source"
+  else
+    ln -s "$source" "$target"
+    echo "  Created symlink: $target → $source"
+  fi
 }
 
 remove_symlink() {
@@ -37,8 +49,12 @@ remove_symlink() {
 
   # Remove symlink if it exists
   if [ -L "$target" ]; then
-    rm -f "$target"
-    echo "  Removed symlink: $target"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove symlink: $target"
+    else
+      rm -f "$target"
+      echo "  Removed symlink: $target"
+    fi
   elif [ -e "$target" ]; then
     echo "  Warning: $target exists but is not a symlink (skipping)"
   fi

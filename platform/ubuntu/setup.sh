@@ -23,9 +23,13 @@ install_apt_package() {
   if dpkg -l | grep -q "^ii  $package "; then
     echo "✓ $package already installed"
   else
-    echo "Installing $package..."
-    sudo apt-get install -y "$package"
-    echo "✓ $package installed"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install $package via APT"
+    else
+      echo "Installing $package..."
+      sudo apt-get install -y "$package"
+      echo "✓ $package installed"
+    fi
   fi
 }
 
@@ -33,9 +37,13 @@ uninstall_apt_package() {
   local package="$1"
 
   if dpkg -l | grep -q "^ii  $package "; then
-    echo "Uninstalling $package..."
-    sudo apt-get remove -y "$package"
-    echo "✓ $package uninstalled"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would uninstall $package via APT"
+    else
+      echo "Uninstalling $package..."
+      sudo apt-get remove -y "$package"
+      echo "✓ $package uninstalled"
+    fi
   else
     echo "✓ $package not installed"
   fi

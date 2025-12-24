@@ -22,7 +22,7 @@ User → bootstrap.sh → platform/{macos,ubuntu}/setup.sh → {packages, config
 2. **Common Configs**: Cross-platform dotfiles (`.vimrc`, `.gitconfig`, `.tmux.conf`) stored in `common/`
 3. **Platform Separation**: macOS and Ubuntu have separate directories with platform-specific logic
 4. **Shared Utilities**: Common functions (platform detection, symlink management) in `utils/`
-5. **Two-Mode Interface**: `--install` and `--uninstall` (with optional `--purge`)
+5. **Two-Mode Interface**: `--install` and `--uninstall` with `--dry-run` for safe preview
 6. **Pure Bash**: No Makefile, all logic in shell scripts
 
 ## Core Commands
@@ -47,6 +47,11 @@ User → bootstrap.sh → platform/{macos,ubuntu}/setup.sh → {packages, config
 ./bootstrap.sh --uninstall vim
 ./bootstrap.sh --uninstall bash nvm
 ./bootstrap.sh --uninstall pyenv pipx
+
+# Preview changes without applying (dry-run mode)
+./bootstrap.sh --dry-run
+./bootstrap.sh --dry-run --install vim git
+./bootstrap.sh --dry-run --uninstall bash
 
 # Show help
 ./bootstrap.sh --help
@@ -127,21 +132,28 @@ dotx/
 ### 1. Bootstrap Flow
 
 ```bash
-bootstrap.sh [--install|--uninstall] [components...]
+bootstrap.sh [--install|--uninstall] [--dry-run] [components...]
   ↓
-  1. Parse mode (install/uninstall) and components (vim, git, tmux, bash, nvm, pyenv, pipx, all)
+  1. Parse arguments:
+     - Mode: install/uninstall (default: install)
+     - Dry-run flag: true/false (default: false)
+     - Components: vim, git, tmux, bash, nvm, pyenv, pipx, all
   ↓
   2. Detect platform (macOS or Ubuntu)
   ↓
-  3. Delegate to platform/macos/setup.sh or platform/ubuntu/setup.sh with components
+  3. Export DRY_RUN environment variable for child scripts
   ↓
-  4. Platform setup orchestrates (for each component):
-     - Install package (inline, if needed)
-     - Setup tool configuration (calls common/{vim,git,tmux,bash,nvm}/setup.sh for config-based components)
-     - Package-only components (pyenv, pipx) install package without configuration
+  4. Delegate to platform/macos/setup.sh or platform/ubuntu/setup.sh with components
+  ↓
+  5. Platform setup orchestrates (for each component):
+     - Install package (inline, if needed) - respects DRY_RUN
+     - Setup tool configuration (calls common/{vim,git,tmux,bash,nvm}/setup.sh) - respects DRY_RUN
+     - Package-only components (pyenv, pipx) install package without configuration - respects DRY_RUN
 ```
 
-**Key Architecture Change**: Packages are now installed inline, right before each tool's setup, rather than in a separate batch step. This ensures each component is fully installed and configured before moving to the next one.
+**Key Architecture Changes**:
+1. **Inline Package Management**: Packages are installed right before each tool's setup, rather than in a separate batch step. This ensures each component is fully installed and configured before moving to the next one.
+2. **Dry-Run Support**: All operations check the `DRY_RUN` environment variable and preview changes instead of applying them when enabled.
 
 ### 2. Selective Component Installation
 
@@ -259,20 +271,43 @@ install_macos() {
 **Package Management Helpers** (in setup.sh):
 ```bash
 install_brew_package() {
-  # Checks if package is installed: brew list <package>
-  # Installs if missing: brew install <package>
+  local package="$1"
+
+  if brew list "$package" &>/dev/null; then
+    echo "✓ $package already installed"
+  else
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install $package via Homebrew"
+    else
+      echo "Installing $package..."
+      brew install "$package"
+      echo "✓ $package installed"
+    fi
+  fi
 }
 
 uninstall_brew_package() {
-  # Checks if package exists
-  # Uninstalls: brew uninstall <package>
+  local package="$1"
+
+  if brew list "$package" &>/dev/null; then
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would uninstall $package via Homebrew"
+    else
+      echo "Uninstalling $package..."
+      brew uninstall "$package"
+      echo "✓ $package uninstalled"
+    fi
+  else
+    echo "✓ $package not installed"
+  fi
 }
 ```
 
 **platform/macos/homebrew.sh**:
 - Checks if Homebrew is installed
-- Runs official installer if not present
-- Runs `brew doctor` to verify
+- Runs official installer if not present (skipped in dry-run mode)
+- Runs `brew doctor` to verify installation
+- Supports dry-run mode to preview installation
 
 **platform/macos/.bashrc.macos**:
 - macOS-specific bash configuration (symlinked to `~/.bashrc.local`)
@@ -350,18 +385,41 @@ install_ubuntu() {
 **Package Management Helpers** (in setup.sh):
 ```bash
 install_apt_package() {
-  # Checks if package is installed: dpkg -l | grep <package>
-  # Installs if missing: sudo apt-get install -y <package>
+  local package="$1"
+
+  if dpkg -l | grep -q "^ii  $package "; then
+    echo "✓ $package already installed"
+  else
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install $package via APT"
+    else
+      echo "Installing $package..."
+      sudo apt-get install -y "$package"
+      echo "✓ $package installed"
+    fi
+  fi
 }
 
 uninstall_apt_package() {
-  # Checks if package exists
-  # Uninstalls: sudo apt-get remove -y <package>
+  local package="$1"
+
+  if dpkg -l | grep -q "^ii  $package "; then
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would uninstall $package via APT"
+    else
+      echo "Uninstalling $package..."
+      sudo apt-get remove -y "$package"
+      echo "✓ $package uninstalled"
+    fi
+  else
+    echo "✓ $package not installed"
+  fi
 }
 ```
 
 **platform/ubuntu/apt.sh**:
-- Runs `sudo apt-get update` to refresh package lists
+- Runs `sudo apt-get update` to refresh package lists (skipped in dry-run mode)
+- Supports dry-run mode to preview update operation
 
 **platform/ubuntu/.bashrc.ubuntu**:
 - Ubuntu-specific bash configuration (symlinked to `~/.bashrc.local`)
@@ -376,32 +434,35 @@ uninstall_apt_package() {
 Each tool in `common/` has its own setup script that handles platform-independent configuration:
 
 **common/vim/setup.sh**:
-- Creates symlink: `~/.vimrc` → `common/vim/.vimrc`
-- Installs vim-plug plugin manager
-- Auto-installs vim plugins
+- Creates symlink: `~/.vimrc` → `common/vim/.vimrc` (dry-run supported)
+- Installs vim-plug plugin manager (dry-run supported)
+- Auto-installs vim plugins via PlugInstall (dry-run supported)
+- Uninstall removes vim-plug and plugins directory (dry-run supported)
 
 **common/git/setup.sh**:
-- Creates symlink: `~/.gitconfig` → `common/git/.gitconfig`
+- Creates symlink: `~/.gitconfig` → `common/git/.gitconfig` (dry-run supported via symlink.sh)
 
 **common/nvm/setup.sh**:
-- Installs nvm (Node Version Manager) version 0.40.1
-- Downloads and installs to `~/.nvm`
+- Installs nvm (Node Version Manager) version 0.40.1 (dry-run supported)
+- Downloads and installs to `~/.nvm` via official installer (dry-run supported)
 - Platform-specific loading configs in `.bashrc.macos` and `.bashrc.ubuntu`
+- Uninstall removes `~/.nvm` directory (dry-run supported)
 
 **common/tmux/setup.sh**:
-- Creates symlinks: `~/.tmux.conf` → `common/tmux/.tmux.conf`
-- Creates symlinks: `~/.tmux.conf.local` → `common/tmux/.tmux.conf.local`
-- Installs powerline fonts (key dependency for tmux):
+- Creates symlinks (dry-run supported):
+  - `~/.tmux.conf` → `common/tmux/.tmux.conf`
+  - `~/.tmux.conf.local` → `common/tmux/.tmux.conf.local`
+- Installs powerline fonts (key dependency for tmux, dry-run supported):
   - Clones https://github.com/powerline/fonts.git to temp directory
   - Runs `./install.sh` from the fonts repo
   - Cleans up temp directory
-- Uninstall also removes powerline fonts via `./uninstall.sh`
+- Uninstall also removes powerline fonts via `./uninstall.sh` (dry-run supported)
 
 **common/bash/setup.sh**:
-- Creates symlinks for bash configuration:
+- Creates symlinks for bash configuration (dry-run supported):
   - `~/.bashrc` → `common/bash/.bashrc` (main configuration)
   - `~/.bash_profile` → `common/bash/.bash_profile` (sources .bashrc for login shells)
-- Installs bash-git-prompt (version 2.7.1):
+- Installs bash-git-prompt (version 2.7.1, dry-run supported):
   - Downloads from GitHub releases
   - Installs to `~/.bash-git-prompt`
   - Symlinks custom WonderChang theme if available
@@ -413,6 +474,7 @@ Each tool in `common/` has its own setup script that handles platform-independen
 - Platform scripts symlink their specific configs as `~/.bashrc.local`:
   - macOS: `~/.bashrc.local` → `platform/macos/.bashrc.macos`
   - Ubuntu: `~/.bashrc.local` → `platform/ubuntu/.bashrc.ubuntu`
+- Uninstall removes bash-git-prompt directory (dry-run supported)
 
 ### 7. Shared Utilities
 
@@ -436,16 +498,111 @@ detect_platform() {
 **utils/symlink.sh**:
 ```bash
 create_symlink() {
-  # 1. Auto-backup existing files
+  local source="$1"
+  local target="$2"
+
+  # 1. Auto-backup existing files (with timestamp)
+  if [ -e "$target" ] && [ ! -L "$target" ]; then
+    local backup="$target.backup.$(date +%Y%m%d_%H%M%S)"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would backup: $target → $backup"
+    else
+      mv "$target" "$backup"
+    fi
+  fi
+
   # 2. Remove old symlinks
+  if [ -L "$target" ]; then
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove existing symlink: $target"
+    else
+      rm "$target"
+    fi
+  fi
+
   # 3. Create new symlink
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "  [DRY-RUN] Would create symlink: $target → $source"
+  else
+    ln -s "$source" "$target"
+    echo "  Created symlink: $target → $source"
+  fi
 }
 
 remove_symlink() {
-  # 1. Remove symlink if it exists
-  # 2. Warn if target exists but is not a symlink
+  local target="$1"
+
+  # Remove symlink if it exists
+  if [ -L "$target" ]; then
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove symlink: $target"
+    else
+      rm -f "$target"
+      echo "  Removed symlink: $target"
+    fi
+  elif [ -e "$target" ]; then
+    echo "  Warning: $target exists but is not a symlink (skipping)"
+  fi
 }
 ```
+
+**Environment Variables**:
+- `DRY_RUN`: Set to "true" to preview operations without making changes. Exported by bootstrap.sh and available to all child scripts.
+
+### 8. Dry-Run Implementation
+
+The dry-run mechanism allows previewing all changes before applying them, providing a safe way to verify configurations.
+
+**How It Works**:
+1. User passes `--dry-run` flag to `bootstrap.sh`
+2. Bootstrap script sets `DRY_RUN=true` and exports it as an environment variable
+3. All child scripts inherit the `DRY_RUN` variable
+4. Each operation checks `${DRY_RUN:-false}` before executing
+5. When true, operations print `[DRY-RUN] Would...` messages instead of executing
+
+**What Gets Previewed**:
+- **Package Operations**: Homebrew/APT package installations and removals
+- **Symlink Operations**: File backups, symlink creations, and removals
+- **Downloads**: vim-plug, bash-git-prompt, nvm, powerline fonts
+- **File Operations**: Directory creations and deletions
+- **Script Executions**: Homebrew installer, plugin managers
+
+**Implementation Pattern**:
+```bash
+# For package installations
+if [ "${DRY_RUN:-false}" = "true" ]; then
+  echo "[DRY-RUN] Would install $package via Homebrew"
+else
+  brew install "$package"
+fi
+
+# For file operations
+if [ "${DRY_RUN:-false}" = "true" ]; then
+  echo "[DRY-RUN] Would download and install nvm"
+else
+  curl -o- "https://..." | bash
+fi
+
+# For deletions
+if [ "${DRY_RUN:-false}" = "true" ]; then
+  echo "  [DRY-RUN] Would remove directory: $dir"
+else
+  rm -rf "$dir"
+fi
+```
+
+**Coverage**:
+- ✅ `bootstrap.sh` - Exports DRY_RUN variable
+- ✅ `utils/symlink.sh` - Symlink creation/removal
+- ✅ `platform/macos/setup.sh` - Package management helpers
+- ✅ `platform/macos/homebrew.sh` - Homebrew installation
+- ✅ `platform/ubuntu/setup.sh` - Package management helpers
+- ✅ `platform/ubuntu/apt.sh` - APT updates
+- ✅ `common/vim/setup.sh` - vim-plug and plugin installation
+- ✅ `common/git/setup.sh` - Uses symlink.sh (automatic support)
+- ✅ `common/tmux/setup.sh` - Powerline fonts installation
+- ✅ `common/bash/setup.sh` - bash-git-prompt installation
+- ✅ `common/nvm/setup.sh` - nvm installation
 
 ## What Gets Installed
 
@@ -520,6 +677,14 @@ remove_symlink() {
 
 ## Safety Features
 
+### Dry-Run Mode
+Preview all changes before applying them:
+- `--dry-run`: Shows what would be installed/uninstalled without making any changes
+- Displays all operations: package installations, symlink creations, file downloads
+- Safe way to verify configuration before running on production machines
+- Works with both `--install` and `--uninstall` modes
+- Example: `./bootstrap.sh --dry-run --install vim`
+
 ### Auto-Backup
 Existing files are automatically backed up before symlinking:
 ```
@@ -560,11 +725,29 @@ install_neovim_setup() {
   echo "=== Neovim Configuration ==="
   create_symlink "$SCRIPT_DIR/init.vim" "$HOME/.config/nvim/init.vim"
   echo "✓ Neovim configuration linked"
+
+  # If you need to download/install plugins, add dry-run check:
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would install neovim plugins"
+  else
+    # Install plugins here
+    echo "✓ Neovim plugins installed"
+  fi
 }
 
 uninstall_neovim_setup() {
   echo "=== Neovim Uninstall ==="
   remove_symlink "$HOME/.config/nvim/init.vim"
+
+  # Clean up with dry-run support
+  if [ -d "$HOME/.config/nvim" ]; then
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove neovim directory"
+    else
+      rm -rf "$HOME/.config/nvim"
+      echo "  Removed neovim directory"
+    fi
+  fi
 }
 
 MODE="${1:-install}"
@@ -573,6 +756,10 @@ case "$MODE" in
   uninstall) uninstall_neovim_setup ;;
 esac
 ```
+
+**Important**:
+- The `create_symlink` and `remove_symlink` functions from `utils/symlink.sh` automatically support dry-run mode
+- For any file operations (downloads, installs, deletes), add explicit `DRY_RUN` checks as shown above
 
 ### 2. Add Configuration File
 
@@ -677,24 +864,34 @@ source "$PROJECT_ROOT/utils/symlink.sh"
 
 COMPONENTS=()
 
-# Package management helpers
+# Package management helpers (with dry-run support)
 install_pacman_package() {
   local package="$1"
   if pacman -Q "$package" &>/dev/null; then
     echo "✓ $package already installed"
   else
-    echo "Installing $package..."
-    sudo pacman -S --noconfirm "$package"
-    echo "✓ $package installed"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install $package via pacman"
+    else
+      echo "Installing $package..."
+      sudo pacman -S --noconfirm "$package"
+      echo "✓ $package installed"
+    fi
   fi
 }
 
 uninstall_pacman_package() {
   local package="$1"
   if pacman -Q "$package" &>/dev/null; then
-    echo "Uninstalling $package..."
-    sudo pacman -R --noconfirm "$package"
-    echo "✓ $package uninstalled"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would uninstall $package via pacman"
+    else
+      echo "Uninstalling $package..."
+      sudo pacman -R --noconfirm "$package"
+      echo "✓ $package uninstalled"
+    fi
+  else
+    echo "✓ $package not installed"
   fi
 }
 
@@ -706,8 +903,12 @@ should_install_component() {
 install_arch() {
   echo "=== Arch Linux Setup ==="
 
-  # Update package database
-  sudo pacman -Sy
+  # Update package database (with dry-run support)
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would run: sudo pacman -Sy"
+  else
+    sudo pacman -Sy
+  fi
 
   # Install components with inline package management
   if should_install_component "vim"; then
@@ -777,17 +978,23 @@ esac
 - **No Separate packages.sh**: All package logic is in setup.sh
 - **Component-Based**: Support selective installation with `should_install_component()`
 - **Platform-Specific Bash Config**: Create `.bashrc.{platform}` symlinked as `~/.bashrc.local`
+- **Dry-Run Support**: All package management helpers and file operations must check `DRY_RUN` environment variable
 
 ## Important Notes
 
-- **Internet Required**: For downloading Homebrew, vim-plug, and plugins
-- **Safe by Default**: Auto-backup before any changes
-- **Idempotent**: Safe to run multiple times
+- **Internet Required**: For downloading Homebrew, vim-plug, bash-git-prompt, nvm, powerline fonts, and plugins
+- **Safe by Default**: Auto-backup before any changes (with timestamp)
+- **Dry-Run Available**: Preview all changes with `--dry-run` before applying
+- **Idempotent**: Safe to run multiple times without side effects
 - **Platform Detection**: Automatic, no user input needed
-- **Supported Platforms**: macOS and Ubuntu/Debian only
+- **Supported Platforms**: macOS and Ubuntu/Debian Linux only
 - **Prerequisites**:
-  - macOS: Automatically installs Homebrew
-  - Ubuntu: Requires `apt-get` (standard)
+  - macOS: Automatically installs Homebrew if needed
+  - Ubuntu: Requires `apt-get` (standard on Ubuntu/Debian)
+- **Versions**:
+  - vim-plug: 0.14.0
+  - bash-git-prompt: 2.7.1
+  - nvm: 0.40.1
 
 ## Quick Reference
 
@@ -797,8 +1004,11 @@ esac
 | Install specific components | `./bootstrap.sh --install vim git` |
 | Install single component | `./bootstrap.sh vim` |
 | Install package-only components | `./bootstrap.sh pyenv pipx` |
+| Preview install (dry-run) | `./bootstrap.sh --dry-run` |
+| Preview specific install | `./bootstrap.sh --dry-run --install vim git` |
 | Remove everything | `./bootstrap.sh --uninstall` |
 | Remove specific components | `./bootstrap.sh --uninstall bash nvm` |
+| Preview uninstall | `./bootstrap.sh --dry-run --uninstall` |
 | Show help | `./bootstrap.sh --help` |
 | Available components | `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `all` |
 | macOS setup only | `bash platform/macos/setup.sh install` |
@@ -824,3 +1034,115 @@ esac
    - **Clear Flow**: Easy to understand "install package → setup config" sequence
    - **Selective Installation**: Only installs packages for requested components
    - **Easier Debugging**: Can see exactly which package+config pair is being processed
+9. **Safety First**: Dry-run mode and auto-backup prevent accidental system changes
+
+## Best Practices
+
+### Running on New Machines
+
+1. **Always dry-run first** to verify what will be installed:
+   ```bash
+   ./bootstrap.sh --dry-run
+   ```
+
+2. **Review the output** to ensure it matches your expectations
+
+3. **Run actual installation** after verification:
+   ```bash
+   ./bootstrap.sh
+   ```
+
+### Selective Installation
+
+1. **Install only what you need** on minimal setups:
+   ```bash
+   ./bootstrap.sh vim git bash
+   ```
+
+2. **Add components later** as needed:
+   ```bash
+   ./bootstrap.sh nvm pyenv
+   ```
+
+### Customization
+
+1. **Platform-specific configs** go in `platform/{macos,ubuntu}/.bashrc.*`
+2. **User-specific configs** can be added to `~/.bashrc.local` after installation (won't be tracked)
+3. **Common configs** that work on all platforms go in `common/bash/.bashrc`
+
+### Testing Changes
+
+1. **Dry-run before committing** new components or changes:
+   ```bash
+   ./bootstrap.sh --dry-run --install <new-component>
+   ```
+
+2. **Test on both platforms** if adding cross-platform components
+
+3. **Verify uninstall** works correctly:
+   ```bash
+   ./bootstrap.sh --dry-run --uninstall <component>
+   ```
+
+## Troubleshooting
+
+### Symlink Already Exists
+
+**Problem**: "Warning: target exists but is not a symlink"
+
+**Solution**:
+- The file exists but isn't a symlink managed by dotx
+- Check if it's safe to remove: `ls -la ~/.vimrc`
+- Manually backup and remove: `mv ~/.vimrc ~/.vimrc.manual.backup && ./bootstrap.sh vim`
+
+### Package Installation Fails
+
+**Problem**: Homebrew/APT package fails to install
+
+**Solution**:
+- macOS: Run `brew doctor` to check Homebrew health
+- Ubuntu: Run `sudo apt-get update` manually
+- Check internet connection
+- Review error messages for specific package issues
+
+### Existing Configurations
+
+**Problem**: Want to preserve existing configs
+
+**Solution**:
+- Automatic backups are created with timestamp: `~/.vimrc.backup.YYYYMMDD_HHMMSS`
+- Check `~/` for `.backup.` files to restore
+- Or use dry-run to see what will be backed up first
+
+### Permission Denied
+
+**Problem**: "Permission denied" when creating symlinks
+
+**Solution**:
+- Ensure you have write access to `$HOME`
+- Don't run with `sudo` - the script manages user dotfiles
+- Platform package installs (APT) will prompt for sudo when needed
+
+### Dry-Run Shows Unexpected Changes
+
+**Problem**: Dry-run output shows unwanted installations
+
+**Solution**:
+- Use selective installation to limit scope
+- Review which components are specified
+- Check if you accidentally specified `all`
+
+## Development Guidelines
+
+When contributing to this project:
+
+1. **Always add dry-run support** to new operations
+2. **Use `${DRY_RUN:-false}` pattern** for consistency
+3. **Prefix dry-run messages** with `[DRY-RUN]`
+4. **Test both dry-run and actual execution** paths
+5. **Update CLAUDE.md** with any architectural changes
+6. **Follow existing code style** (bash best practices, set -eu, etc.)
+7. **Make scripts idempotent** - safe to run multiple times
+8. **Add comments** for non-obvious logic
+9. **Use absolute paths** when sourcing utilities
+10. **Handle errors gracefully** with meaningful messages

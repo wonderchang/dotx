@@ -7,8 +7,12 @@ set -eu
 update_apt() {
   echo "=== Updating APT ==="
 
-  sudo apt-get update
-  echo "✓ APT updated"
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would run: sudo apt-get update"
+  else
+    sudo apt-get update
+    echo "✓ APT updated"
+  fi
   echo ""
 }
 

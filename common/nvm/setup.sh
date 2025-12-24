@@ -17,12 +17,16 @@ install_nvm_setup() {
   if [ -d "$NVM_DIR" ]; then
     echo "✓ nvm already installed at $NVM_DIR"
   else
-    echo "Installing nvm ${NVM_VERSION}..."
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install nvm ${NVM_VERSION} from GitHub"
+    else
+      echo "Installing nvm ${NVM_VERSION}..."
 
-    # Download and install nvm
-    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
+      # Download and install nvm
+      curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
 
-    echo "✓ nvm installed"
+      echo "✓ nvm installed"
+    fi
   fi
 
   echo ""
@@ -33,8 +37,12 @@ uninstall_nvm_setup() {
 
   # Remove nvm directory
   if [ -d "$NVM_DIR" ]; then
-    rm -rf "$NVM_DIR"
-    echo "  Removed nvm directory"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove nvm directory"
+    else
+      rm -rf "$NVM_DIR"
+      echo "  Removed nvm directory"
+    fi
   fi
 
   echo ""

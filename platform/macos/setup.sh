@@ -23,9 +23,13 @@ install_brew_package() {
   if brew list "$package" &>/dev/null; then
     echo "✓ $package already installed"
   else
-    echo "Installing $package..."
-    brew install "$package"
-    echo "✓ $package installed"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install $package via Homebrew"
+    else
+      echo "Installing $package..."
+      brew install "$package"
+      echo "✓ $package installed"
+    fi
   fi
 }
 
@@ -33,9 +37,13 @@ uninstall_brew_package() {
   local package="$1"
 
   if brew list "$package" &>/dev/null; then
-    echo "Uninstalling $package..."
-    brew uninstall "$package"
-    echo "✓ $package uninstalled"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would uninstall $package via Homebrew"
+    else
+      echo "Uninstalling $package..."
+      brew uninstall "$package"
+      echo "✓ $package uninstalled"
+    fi
   else
     echo "✓ $package not installed"
   fi
