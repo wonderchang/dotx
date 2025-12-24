@@ -320,7 +320,6 @@ uninstall_brew_package() {
 - Trash directory path for macOS (`$HOME/.Trash`)
 - Homebrew environment initialization
 - macOS-specific aliases (TextEdit)
-- nvm loading from Homebrew path (`/opt/homebrew/opt/nvm`)
 
 ### 4. Uninstall Flow
 
@@ -433,7 +432,6 @@ uninstall_apt_package() {
 - APT package management aliases
 - Ubuntu-specific color support (dircolors)
 - Snap bin PATH configuration
-- nvm loading from standard installation (`$HOME/.nvm`)
 
 ### 6. Tool Setup Scripts
 
@@ -451,7 +449,7 @@ Each tool in `common/` has its own setup script that handles platform-independen
 **common/nvm/setup.sh**:
 - Installs nvm (Node Version Manager) version 0.40.1 (dry-run supported)
 - Downloads and installs to `~/.nvm` via official installer (dry-run supported)
-- Platform-specific loading configs in `.bashrc.macos` and `.bashrc.ubuntu`
+- nvm is loaded from `common/bash/.bashrc` (same path `$HOME/.nvm` on both macOS and Ubuntu)
 - Uninstall removes `~/.nvm` directory (dry-run supported)
 
 **common/tmux/setup.sh**:
@@ -475,6 +473,7 @@ Each tool in `common/` has its own setup script that handles platform-independen
 - `.bashrc` contains:
   - Platform-independent settings (aliases, functions, environment variables)
   - bash-git-prompt integration with WonderChang theme
+  - nvm, pyenv, and pipx loading (from `$HOME/.nvm`, `$HOME/.pyenv`, `$HOME/.local/bin`)
   - Sources `~/.bashrc.local` for platform-specific or user customizations
 - Same bash files used on both macOS and Ubuntu
 - Platform scripts symlink their specific configs as `~/.bashrc.local`:
@@ -723,7 +722,7 @@ fi
   - Uninstall restores shell back to zsh
 
 - **Platform-Specific Bash Config**:
-  - `~/.bashrc.local` → `platform/macos/.bashrc.macos` (Homebrew setup, macOS aliases, nvm)
+  - `~/.bashrc.local` → `platform/macos/.bashrc.macos` (Homebrew setup, macOS aliases)
 
 ### Ubuntu-Specific
 
@@ -738,7 +737,7 @@ fi
   - pipx (optional, package-only component)
 
 - **Platform-Specific Bash Config**:
-  - `~/.bashrc.local` → `platform/ubuntu/.bashrc.ubuntu` (APT aliases, dircolors, snap PATH, nvm)
+  - `~/.bashrc.local` → `platform/ubuntu/.bashrc.ubuntu` (APT aliases, dircolors, snap PATH)
 
 ## Safety Features
 
