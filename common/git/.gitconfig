@@ -1,20 +1,33 @@
-[core]
-	editor = vim
-	autocrlf = input
-
-[color]
-	ui = auto
-
 [alias]
-	st = status
-	co = checkout
-	br = branch
-	ci = commit
-	df = diff
-	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  st = status
+  br = branch
+  co = checkout
+  ci = commit
+  d  = difftool
+  gr = log \
+    --date=short \
+    --graph \
+    --pretty=format:'%C(yellow)%h%Creset %ad %C(bold green)%an%Creset %s%C(yellow)%d%Creset'
+[color]
+  ui = true
+[diff]
+  tool = vimdiff
+[difftool]
+  prompt = false
+[core]
+  editor = vim
+[merge]
+  tool = vimdiff
+[url "https://"]
+  insteadOf = git://
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  required = true
+  process = git-lfs filter-process
+[user]
+  name = Wonder Chang
+  email = iwonder.tw@gmail.com
 
-[pull]
-	rebase = false
 
-[init]
-	defaultBranch = main
+# vi:et:ts=2:sw=2:cc=80
