@@ -124,9 +124,7 @@ install_ubuntu() {
   fi
 
   if should_install_component "pyenv"; then
-    echo "=== Pyenv ==="
-    install_apt_package "pyenv"
-    echo "✓ pyenv installed (no configuration needed)"
+    bash "$PROJECT_ROOT/common/pyenv/setup.sh" install
     echo ""
   fi
 
@@ -188,8 +186,7 @@ uninstall_ubuntu() {
   fi
 
   if should_install_component "pyenv"; then
-    echo "=== Pyenv ==="
-    uninstall_apt_package "pyenv"
+    bash "$PROJECT_ROOT/common/pyenv/setup.sh" uninstall
     echo ""
   fi
 

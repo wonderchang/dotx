@@ -97,8 +97,11 @@ fi
 # ============================================================================
 
 export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init - bash)"
+# Only load pyenv if it's installed
+if [ -d "$PYENV_ROOT" ]; then
+  export PATH="$PYENV_ROOT/bin:$PATH"
+  eval "$(pyenv init - bash)"
+fi
 
 # ============================================================================
 # pipenv
