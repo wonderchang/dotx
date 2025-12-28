@@ -54,6 +54,7 @@ cd ~/dotx
 - **nvm** - Node Version Manager
 - **pyenv** - Python version manager
 - **pipx** - Python application installer
+- **uv** - Python package and project manager
 
 **Configurations:**
 - Cross-platform dotfiles (`.vimrc`, `.gitconfig`, `.tmux.conf`, `.bashrc`)
@@ -108,6 +109,7 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 | `nvm` | Node Version Manager |
 | `pyenv` | Python version manager |
 | `pipx` | Python app installer |
+| `uv` | Python package/project manager |
 | `all` | All components (default) |
 
 ## Platform Support

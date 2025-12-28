@@ -41,7 +41,7 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ./bootstrap.sh --help
 ```
 
-**Available components:** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `all`
+**Available components:** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `all`
 
 ## Directory Structure
 
@@ -55,7 +55,8 @@ dotx/
 │   ├── tmux/                       # Tmux config + powerline fonts
 │   ├── nvm/                        # NVM installer
 │   ├── pyenv/                      # pyenv installer
-│   └── pipx/                       # pipx installer
+│   ├── pipx/                       # pipx installer
+│   └── uv/                         # uv installer
 ├── platform/
 │   ├── macos/                      # macOS setup + Homebrew
 │   └── ubuntu/                     # Ubuntu setup + APT

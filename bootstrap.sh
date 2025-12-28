@@ -106,8 +106,9 @@ while [[ $# -gt 0 ]]; do
       echo "  tmux        Tmux terminal multiplexer"
       echo "  bash        Bash configuration with bash-git-prompt"
       echo "  nvm         Node Version Manager"
-      echo "  pyenv       Python version manager (package only)"
-      echo "  pipx        Python application installer (package only)"
+      echo "  pyenv       Python version manager"
+      echo "  pipx        Python application installer"
+      echo "  uv          Python package and project manager"
       echo "  all         All components (default if none specified)"
       echo ""
       echo "Examples:"
@@ -121,7 +122,7 @@ while [[ $# -gt 0 ]]; do
       echo "  $0 --uninstall             # Uninstall everything"
       exit 0
       ;;
-    vim|git|tmux|bash|nvm|pyenv|pipx|all)
+    vim|git|tmux|bash|nvm|pyenv|pipx|uv|all)
       COMPONENTS+=("$1")
       shift
       ;;
