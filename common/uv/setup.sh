@@ -74,6 +74,16 @@ uninstall_uv_setup() {
     fi
   fi
 
+  # Remove uvx binary (installed alongside uv)
+  if [ -f "$HOME/.local/bin/uvx" ]; then
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove uvx binary: ~/.local/bin/uvx"
+    else
+      rm -f "$HOME/.local/bin/uvx"
+      echo "  Removed uvx binary: ~/.local/bin/uvx"
+    fi
+  fi
+
   # Remove uv-created env file if it exists
   if [ -f "$HOME/.local/bin/env" ]; then
     if [ "${DRY_RUN:-false}" = "true" ]; then
