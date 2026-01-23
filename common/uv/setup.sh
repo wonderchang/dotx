@@ -58,8 +58,8 @@ install_uv_setup() {
 uninstall_uv_setup() {
   echo "=== uv Uninstall ==="
 
-  # Check if uv is installed
-  if ! command -v uv &> /dev/null; then
+  # Check if any uv files exist (don't rely on PATH)
+  if [ ! -f "$HOME/.local/bin/uv" ] && [ ! -f "$HOME/.local/bin/uvx" ] && [ ! -f "$HOME/.local/bin/env" ]; then
     echo "✓ uv not installed"
     return 0
   fi
