@@ -7,6 +7,24 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+# Remove auto-added env line from a shell config file
+# Args: $1 = file path (e.g., ~/.bashrc)
+cleanup_env_line() {
+  local file_path="$1"
+  local file_name=$(basename "$file_path")
+
+  # Resolve symlink to actual file
+  if [ -L "$file_path" ]; then
+    file_path=$(readlink -f "$file_path" 2>/dev/null || readlink "$file_path" 2>/dev/null || echo "$file_path")
+  fi
+
+  if [ -f "$file_path" ] && grep -q '^\. "\$HOME/\.local/bin/env"' "$file_path"; then
+    grep -v '^\. "\$HOME/\.local/bin/env"' "$file_path" > "$file_path.tmp"
+    mv "$file_path.tmp" "$file_path"
+    echo "✓ Cleaned up auto-added line from $file_name"
+  fi
+}
+
 install_uv_setup() {
   echo "=== uv Setup ==="
 
@@ -19,27 +37,16 @@ install_uv_setup() {
   # Install uv via official installer
   if [ "${DRY_RUN:-false}" = "true" ]; then
     echo "[DRY-RUN] Would download and install uv from https://astral.sh/uv/install.sh"
-    echo "[DRY-RUN] Would remove auto-added line from ~/.bashrc"
+    echo "[DRY-RUN] Would remove auto-added line from ~/.bashrc and ~/.bash_profile"
   else
     echo "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
     echo "✓ uv installed"
 
-    # Remove the line that uv installer automatically adds to .bashrc
+    # Remove the line that uv installer automatically adds to shell configs
     # We don't need it because ~/.local/bin is already in PATH
-    # Handle both regular files and symlinks (resolve to actual file)
-    local bashrc_path="$HOME/.bashrc"
-    if [ -L "$bashrc_path" ]; then
-      # If it's a symlink, get the actual file path
-      bashrc_path=$(readlink -f "$bashrc_path" 2>/dev/null || readlink "$bashrc_path" 2>/dev/null || echo "$HOME/.bashrc")
-    fi
-
-    if [ -f "$bashrc_path" ] && grep -q '^\. "\$HOME/\.local/bin/env"' "$bashrc_path"; then
-      # Create a temporary file without the uv-added line
-      grep -v '^\. "\$HOME/\.local/bin/env"' "$bashrc_path" > "$bashrc_path.tmp"
-      mv "$bashrc_path.tmp" "$bashrc_path"
-      echo "✓ Cleaned up auto-added line from .bashrc"
-    fi
+    cleanup_env_line "$HOME/.bashrc"
+    cleanup_env_line "$HOME/.bash_profile"
   fi
 
   echo ""
