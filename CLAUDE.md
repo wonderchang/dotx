@@ -41,7 +41,7 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ./bootstrap.sh --help
 ```
 
-**Available components:** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `all`
+**Available components:** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`, `all`
 
 ## Directory Structure
 
@@ -56,7 +56,8 @@ dotx/
 │   ├── nvm/                        # NVM installer
 │   ├── pyenv/                      # pyenv installer
 │   ├── pipx/                       # pipx installer
-│   └── uv/                         # uv installer
+│   ├── uv/                         # uv installer
+│   └── rust/                       # Rust installer (rustup)
 ├── platform/
 │   ├── macos/                      # macOS setup + Homebrew
 │   └── ubuntu/                     # Ubuntu setup + APT
@@ -129,7 +130,7 @@ fi
 
 **Cross-platform configs (symlinked):**
 - `~/.vimrc`, `~/.gitconfig`, `~/.tmux.conf`, `~/.bashrc`
-- vim-plug, bash-git-prompt, powerline fonts, nvm, pyenv, pipx
+- vim-plug, bash-git-prompt, powerline fonts, nvm, pyenv, pipx, uv, rust
 
 **Platform-specific configs:**
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
