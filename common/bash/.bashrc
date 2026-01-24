@@ -121,3 +121,12 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 # This loads nvm bash_completion
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# ============================================================================
+# Rust
+# ============================================================================
+
+# Cargo installs executables to ~/.cargo/bin
+if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]] && [ -d "$HOME/.cargo/bin" ]; then
+  export PATH="$HOME/.cargo/bin:$PATH"
+fi

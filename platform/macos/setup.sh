@@ -151,6 +151,11 @@ install_macos() {
     echo ""
   fi
 
+  if should_install_component "rust"; then
+    bash "$PROJECT_ROOT/common/rust/setup.sh" install
+    echo ""
+  fi
+
   echo "========================================"
   echo "  ✓ macOS Setup Complete!"
   echo "========================================"
@@ -225,6 +230,11 @@ uninstall_macos() {
 
   if should_install_component "uv"; then
     bash "$PROJECT_ROOT/common/uv/setup.sh" uninstall
+    echo ""
+  fi
+
+  if should_install_component "rust"; then
+    bash "$PROJECT_ROOT/common/rust/setup.sh" uninstall
     echo ""
   fi
 
