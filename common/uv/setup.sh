@@ -37,7 +37,7 @@ install_uv_setup() {
   # Install uv via official installer
   if [ "${DRY_RUN:-false}" = "true" ]; then
     echo "[DRY-RUN] Would download and install uv from https://astral.sh/uv/install.sh"
-    echo "[DRY-RUN] Would remove auto-added line from ~/.bashrc and ~/.bash_profile"
+    echo "[DRY-RUN] Would remove auto-added line from shell configs"
   else
     echo "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -47,6 +47,7 @@ install_uv_setup() {
     # We don't need it because ~/.local/bin is already in PATH
     cleanup_env_line "$HOME/.bashrc"
     cleanup_env_line "$HOME/.bash_profile"
+    cleanup_env_line "$HOME/.profile"
   fi
 
   echo ""

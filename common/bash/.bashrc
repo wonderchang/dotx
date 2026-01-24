@@ -108,7 +108,9 @@ fi
 # ============================================================================
 
 # pipx and uv both install executables to ~/.local/bin
-export PATH="$PATH:$HOME/.local/bin"
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+  export PATH="$PATH:$HOME/.local/bin"
+fi
 
 # ============================================================================
 # nvm
