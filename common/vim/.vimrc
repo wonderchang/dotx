@@ -81,4 +81,5 @@ Plug 'pangloss/vim-javascript'    " JavaScript support
 Plug 'leafgarland/typescript-vim' " TypeScript syntax
 Plug 'maxmellon/vim-jsx-pretty'   " JS and JSX syntax
 Plug 'jparise/vim-graphql'        " GraphQL syntax
+Plug 'rust-lang/rust.vim'         " Rust syntax
 call plug#end()
