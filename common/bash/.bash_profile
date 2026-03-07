@@ -4,3 +4,8 @@
 if [ -f "$HOME/.bashrc" ]; then
     source "$HOME/.bashrc"
 fi
+
+# Start in Workspace directory for new login shells
+if [ "$PWD" = "$HOME" ]; then
+    cd "$HOME/Workspace"
+fi
