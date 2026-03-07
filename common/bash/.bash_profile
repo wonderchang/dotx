@@ -6,6 +6,6 @@ if [ -f "$HOME/.bashrc" ]; then
 fi
 
 # Start in Workspace directory for new login shells
-if [ "$PWD" = "$HOME" ]; then
+if [ "$PWD" = "$HOME" ] && [ -d "$HOME/Workspace" ]; then
     cd "$HOME/Workspace"
 fi
