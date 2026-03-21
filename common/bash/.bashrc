@@ -130,3 +130,12 @@ export NVM_DIR="$HOME/.nvm"
 if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]] && [ -d "$HOME/.cargo/bin" ]; then
   export PATH="$HOME/.cargo/bin:$PATH"
 fi
+
+# ============================================================================
+# Claude Code
+# ============================================================================
+
+# Account-switching aliases using CLAUDE_CONFIG_DIR
+# Usage: run alias, then /login inside the session to authenticate
+alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
+alias claude-work='CLAUDE_CONFIG_DIR=~/.claude-work claude'
