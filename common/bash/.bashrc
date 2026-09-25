@@ -137,5 +137,4 @@ fi
 
 # Account-switching aliases using CLAUDE_CONFIG_DIR
 # Usage: run alias, then /login inside the session to authenticate
-alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
 alias claude-work='CLAUDE_CONFIG_DIR=~/.claude-work claude'
