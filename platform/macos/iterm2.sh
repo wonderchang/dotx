@@ -15,8 +15,8 @@ set -eu
 
 ITERM2_DOMAIN="com.googlecode.iterm2"
 ITERM2_APP="/Applications/iTerm.app"
-POWERLINE_FONT="MesloLGMForPowerline-Regular"
-POWERLINE_FONT_FILE="$HOME/Library/Fonts/Meslo LG M Regular for Powerline.ttf"
+POWERLINE_FONT="SourceCodeProForPowerline-Regular"
+POWERLINE_FONT_FILE="$HOME/Library/Fonts/Source Code Pro for Powerline.otf"
 DEFAULT_FONT_SIZE="12"
 BACKUP_FILE="$HOME/.config/dotx/iterm2-font.backup"
 PLISTBUDDY="/usr/libexec/PlistBuddy"
@@ -52,7 +52,7 @@ default_profile_index() {
 
 print_manual_instructions() {
   echo "  To set it manually: iTerm2 → Settings → Profiles → Text → Font"
-  echo "  → choose 'Meslo LG M for Powerline'"
+  echo "  → choose 'Source Code Pro for Powerline'"
   echo "  Or quit iTerm2 and re-run from Terminal.app: ./bootstrap.sh tmux"
 }
 

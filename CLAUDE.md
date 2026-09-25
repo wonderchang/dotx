@@ -102,7 +102,7 @@ fi
 - Modern bash via Homebrew (macOS ships with old bash 3.2)
 - Automatic shell switching to bash on macOS
 - Uses `install_brew_package()` helper
-- Sets iTerm2 default profile font to Meslo LG M for Powerline (via `iterm2.sh`, part of `tmux`); skipped while iTerm2 is running or if a Powerline/Nerd font is already set, restored on uninstall
+- Sets iTerm2 default profile font to Source Code Pro for Powerline (via `iterm2.sh`, part of `tmux`); skipped while iTerm2 is running or if a Powerline/Nerd font is already set, restored on uninstall
 
 **Ubuntu specifics:**
 - Runs `apt-get update` first (via `apt.sh`)
