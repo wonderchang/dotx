@@ -104,7 +104,7 @@ install_macos() {
     echo "=== Tmux ==="
     install_brew_package "tmux"
     bash "$PROJECT_ROOT/common/tmux/setup.sh" install
-    echo ""
+    bash "$SCRIPT_DIR/iterm2.sh" install
   fi
 
   if should_install_component "bash"; then
@@ -185,6 +185,7 @@ uninstall_macos() {
 
   if should_install_component "tmux"; then
     echo "=== Tmux ==="
+    bash "$SCRIPT_DIR/iterm2.sh" uninstall
     bash "$PROJECT_ROOT/common/tmux/setup.sh" uninstall
     uninstall_brew_package "tmux"
     echo ""
