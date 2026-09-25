@@ -28,6 +28,23 @@
 [user]
   name = Wonder Chang
   email = iwonder.tw@gmail.com
+  signingkey = ~/.ssh/id_ed25519_git.pub
 
+[gpg]
+  format = ssh
 
-# vi:et:ts=2:sw=2:cc=80
+[gpg "ssh"]
+  allowedSignersFile = ~/.ssh/allowed_signers
+
+[commit]
+  gpgsign = true
+
+[credential "https://github.com"]
+
+  helper = !/opt/homebrew/bin/gh auth git-credential
+
+[credential "https://gist.github.com"]
+  helper = !/opt/homebrew/bin/gh auth git-credential
+
+[url "git@github.com:"]
+  insteadOf = https://github.com/
