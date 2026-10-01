@@ -11,6 +11,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$PROJECT_ROOT/utils/symlink.sh"
 source "$PROJECT_ROOT/utils/shell.sh"
 source "$PROJECT_ROOT/utils/detect.sh"
+source "$PROJECT_ROOT/utils/sudo.sh"
 
 # Component list to install/uninstall
 COMPONENTS=()
@@ -77,11 +78,36 @@ should_install_component() {
   return 1
 }
 
+# Ask for the password up front only when a later step will actually need it,
+# so a no-op re-run stays silent.
+request_sudo_for_install() {
+  local reasons=()
+  load_brew_shellenv
+  if ! command -v brew &>/dev/null; then
+    reasons+=("Homebrew installer")
+  fi
+  if should_install_component "bash" && [ "$(get_current_shell)" != "$(homebrew_bash_path)" ]; then
+    reasons+=("switching the login shell to bash")
+  fi
+  if [ ${#reasons[@]} -gt 0 ]; then
+    request_sudo "$(IFS=,; echo "${reasons[*]}")"
+  fi
+}
+
+request_sudo_for_uninstall() {
+  if should_install_component "bash" && [ "$(get_current_shell)" != "/bin/zsh" ]; then
+    request_sudo "restoring the login shell to zsh"
+  fi
+}
+
 install_macos() {
   echo "========================================"
   echo "  macOS Setup"
   echo "========================================"
   echo ""
+
+  # 0. Ask for the password once, if any later step needs it
+  request_sudo_for_install
 
   # 1. Install Homebrew (prerequisite)
   bash "$SCRIPT_DIR/homebrew.sh"
@@ -174,6 +200,9 @@ uninstall_macos() {
   echo "  macOS Uninstall"
   echo "========================================"
   echo ""
+
+  # 0. Ask for the password once, if any later step needs it
+  request_sudo_for_uninstall
 
   # 1. Uninstall tools with their packages
   if should_install_component "vim"; then

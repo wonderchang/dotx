@@ -21,7 +21,8 @@ A fresh machine gets a complete development environment with a single command.
 
 - It starts with nothing but what the system ships with. On a fresh Mac that means bash 3.2 and no Homebrew on PATH, and it must still run to completion.
 - Nothing needs to be prepared by hand beforehand. Prerequisites such as Homebrew or package index updates are handled by dotx itself.
-- Steps that genuinely cannot be automated (for example, changing iTerm2 settings while it is running, or `chsh` asking for a password) must print the reason and the manual steps. They are never skipped silently.
+- The run never stops to ask questions. If administrator rights are needed, the password is asked **once, at the start**, and reused by every later step.
+- Steps that genuinely cannot be automated (for example, changing iTerm2 settings while it is running) must print the reason and the manual steps. They are never skipped silently.
 
 ### 2. One-command uninstall
 

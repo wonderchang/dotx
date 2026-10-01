@@ -63,6 +63,7 @@ dotx/
 └── utils/                          # Shared utilities
     ├── detect.sh                   # Platform detection
     ├── shell.sh                    # Shell switching
+    ├── sudo.sh                     # One-time password prompt + sudo keepalive
     └── symlink.sh                  # Symlink management
 ```
 
@@ -167,7 +168,7 @@ fi
 - Installs modern bash via Homebrew (5.x vs system 3.2)
 - Automatically switches from zsh to Homebrew bash
 - Adds bash to `/etc/shells` if needed
-- Requires password for `chsh` command
+- Runs `chsh` via sudo, so it reuses the password asked once at the start of the run
 - **Requires terminal restart** for changes to take effect
 
 ## Adding New Components
@@ -189,7 +190,7 @@ fi
 ## Development Guidelines
 
 - **Always add dry-run support** to new operations
-- **Never block on a prompt** - run third-party installers non-interactively (`NONINTERACTIVE=1` for Homebrew, `-y` for rustup/apt, `vim -es` for PlugInstall); only sudo/chsh password prompts are allowed, and they must be announced first
+- **Never block on a prompt** - run third-party installers non-interactively (`NONINTERACTIVE=1` for Homebrew, `-y` for rustup/apt, `vim -es` for PlugInstall); the only prompt allowed is the single password request at the start of a run (`request_sudo` in `utils/sudo.sh`, asked only when a later step needs sudo; run anything that needs root through `sudo` so the cached credential is reused)
 - **Use `${DRY_RUN:-false}` pattern** for consistency
 - **Test both dry-run and actual execution** paths
 - **Make scripts idempotent** - safe to run multiple times

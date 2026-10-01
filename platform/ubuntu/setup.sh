@@ -9,6 +9,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Source utilities for bash setup
 source "$PROJECT_ROOT/utils/symlink.sh"
+source "$PROJECT_ROOT/utils/sudo.sh"
 
 # Component list to install/uninstall
 COMPONENTS=()
@@ -80,6 +81,9 @@ install_ubuntu() {
   echo "  Ubuntu Setup"
   echo "========================================"
   echo ""
+
+  # 0. Ask for the password once; apt-get needs it throughout
+  request_sudo "apt-get update / install"
 
   # 1. Update APT and install base prerequisites (curl, git)
   bash "$SCRIPT_DIR/apt.sh"
@@ -158,6 +162,9 @@ uninstall_ubuntu() {
   echo "  Ubuntu Uninstall"
   echo "========================================"
   echo ""
+
+  # 0. Ask for the password once; apt-get remove needs it
+  request_sudo "apt-get remove"
 
   # 1. Uninstall tools with their packages
   if should_install_component "vim"; then

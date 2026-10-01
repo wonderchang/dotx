@@ -11,6 +11,18 @@ get_current_shell() {
   dscl . -read ~/ UserShell | awk '{print $2}'
 }
 
+# Path of Homebrew bash on this machine (empty if not installed)
+homebrew_bash_path() {
+  local p
+  for p in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+    if [ -x "$p" ]; then
+      echo "$p"
+      return 0
+    fi
+  done
+  echo ""
+}
+
 switch_to_bash() {
   local current_shell=$(get_current_shell)
   local bash_path
@@ -18,10 +30,9 @@ switch_to_bash() {
   # On macOS, use Homebrew bash (required to be installed first)
   # This gives us modern bash (5.x) instead of old system bash (3.2)
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    if command -v /opt/homebrew/bin/bash &>/dev/null; then
-      bash_path="/opt/homebrew/bin/bash"
-    elif command -v /usr/local/bin/bash &>/dev/null; then
-      bash_path="/usr/local/bin/bash"
+    bash_path="$(homebrew_bash_path)"
+    if [ -n "$bash_path" ]; then
+      :
     elif [ "${DRY_RUN:-false}" = "true" ]; then
       # In dry-run the brew install above was only previewed
       echo "  [DRY-RUN] Would switch default shell to Homebrew bash once installed"
@@ -56,7 +67,6 @@ switch_to_bash() {
     echo "      Current: $current_shell"
     echo "      New:     $bash_path"
     echo ""
-    echo "  You may be prompted for your password."
 
     # Ensure bash is in /etc/shells
     if ! grep -q "^${bash_path}$" /etc/shells; then
@@ -64,8 +74,9 @@ switch_to_bash() {
       echo "$bash_path" | sudo tee -a /etc/shells >/dev/null
     fi
 
-    # Change shell
-    chsh -s "$bash_path"
+    # Change shell via sudo: reuses the password entered at the start of the
+    # run instead of chsh asking for it again.
+    sudo chsh -s "$bash_path" "$(id -un)"
 
     if [ $? -eq 0 ]; then
       echo ""
@@ -99,7 +110,7 @@ restore_shell() {
     echo "  [DRY-RUN] Would restore default shell to: $target_shell"
   else
     echo "  Restoring default shell to: $target_shell"
-    chsh -s "$target_shell"
+    sudo chsh -s "$target_shell" "$(id -un)"
 
     if [ $? -eq 0 ]; then
       echo "  ✓ Default shell restored"
