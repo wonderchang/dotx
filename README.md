@@ -84,11 +84,16 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 ## Usage
 
 ```bash
-# Install all components
+# Install the basic components
 ./bootstrap.sh
 
-# Install specific components
+# Install specific components (optional ones like gcloud only this way)
 ./bootstrap.sh vim git tmux
+./bootstrap.sh gcloud
+./bootstrap.sh basic gcloud   # basic set plus gcloud
+
+# Everything, including optional components
+./bootstrap.sh all
 
 # Uninstall components
 ./bootstrap.sh --uninstall vim
@@ -102,19 +107,22 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 
 ## Components
 
-| Component | Description |
-|-----------|-------------|
-| `vim` | Vim editor with plugins |
-| `git` | Git configuration |
-| `tmux` | Tmux with powerline theme |
-| `bash` | Bash with git prompt |
-| `nvm` | Node Version Manager |
-| `pyenv` | Python version manager |
-| `pipx` | Python app installer |
-| `uv` | Python package/project manager |
-| `rust` | Rust toolchain (rustup) |
-| `gcloud` | Google Cloud CLI |
-| `all` | All components (default) |
+Basic components are installed by a plain `./bootstrap.sh`; optional ones only when named explicitly.
+
+| Component | Tier | Description |
+|-----------|------|-------------|
+| `vim` | basic | Vim editor with plugins |
+| `git` | basic | Git configuration |
+| `tmux` | basic | Tmux with powerline theme |
+| `bash` | basic | Bash with git prompt |
+| `nvm` | basic | Node Version Manager |
+| `pyenv` | basic | Python version manager |
+| `pipx` | basic | Python app installer |
+| `uv` | basic | Python package/project manager |
+| `rust` | basic | Rust toolchain (rustup) |
+| `gcloud` | optional | Google Cloud CLI |
+| `basic` | keyword | The basic components (default) |
+| `all` | keyword | Basic + optional components |
 
 ## Platform Support
 
@@ -140,7 +148,8 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 
 ```bash
 cd ~/dotx
-./bootstrap.sh --uninstall
+./bootstrap.sh --uninstall        # the basic components
+./bootstrap.sh --uninstall all    # everything, including optional components
 ```
 
 Or uninstall specific components:

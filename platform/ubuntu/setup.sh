@@ -10,6 +10,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # Source utilities for bash setup
 source "$PROJECT_ROOT/utils/symlink.sh"
 source "$PROJECT_ROOT/utils/sudo.sh"
+source "$PROJECT_ROOT/utils/components.sh"   # should_install_component()
 
 # Component list to install/uninstall
 COMPONENTS=()
@@ -48,32 +49,6 @@ uninstall_apt_package() {
   else
     echo "✓ $package not installed"
   fi
-}
-
-# Check if a component should be processed
-should_install_component() {
-  local component="$1"
-
-  # If no components specified, install all
-  if [ ${#COMPONENTS[@]} -eq 0 ]; then
-    return 0
-  fi
-
-  # Check if 'all' is in components
-  for c in "${COMPONENTS[@]}"; do
-    if [ "$c" = "all" ]; then
-      return 0
-    fi
-  done
-
-  # Check if specific component is in list
-  for c in "${COMPONENTS[@]}"; do
-    if [ "$c" = "$component" ]; then
-      return 0
-    fi
-  done
-
-  return 1
 }
 
 install_ubuntu() {

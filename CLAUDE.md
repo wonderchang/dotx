@@ -41,7 +41,9 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ./bootstrap.sh --help
 ```
 
-**Available components:** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`, `gcloud`, `all`
+**Basic components (default):** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`
+**Optional components (only when named):** `gcloud`
+**Keywords:** `basic` (the default set), `all` (basic + optional)
 
 ## Directory Structure
 
@@ -63,6 +65,7 @@ dotx/
 └── utils/                          # Shared utilities
     ├── detect.sh                   # Platform detection
     ├── shell.sh                    # Shell switching
+    ├── components.sh               # Basic/optional component tiers + selection
     ├── sudo.sh                     # One-time password prompt + sudo keepalive
     └── symlink.sh                  # Symlink management
 ```
@@ -81,11 +84,13 @@ dotx/
 
 ### Component Selection
 
-- **No components** → Install all
-- **`all` specified** → Install all
-- **Specific components** → Install only those
+Two tiers, defined in `utils/components.sh` (`BASIC_COMPONENTS`, `OPTIONAL_COMPONENTS`):
 
-Implementation uses `should_install_component()` function in platform setup scripts.
+- **No components** or **`basic`** → the basic set
+- **`all`** → basic + optional (everything dotx knows)
+- **Specific components** → exactly those (`basic gcloud` = basic set plus gcloud)
+
+The same rules apply to `--uninstall`: a plain `--uninstall` removes the basic set, `--uninstall all` also removes optional components. `should_install_component()` in `utils/components.sh` implements this and is shared by both platform setup scripts.
 
 ### Platform Setup
 
@@ -180,13 +185,13 @@ fi
 1. Create `common/{tool}/setup.sh` with `install_*()` and `uninstall_*()` functions
 2. Add dry-run checks for all operations
 3. Update `platform/{macos,ubuntu}/setup.sh` with conditional installation
-4. Update `bootstrap.sh` to accept component name
+4. Add the name to `BASIC_COMPONENTS` or `OPTIONAL_COMPONENTS` in `utils/components.sh` and to the help text in `bootstrap.sh`
 5. Update this file's component list
 
 ### Package-Only (No Config)
 
 1. Add conditional block in `platform/{macos,ubuntu}/setup.sh`
-2. Update `bootstrap.sh` to accept component name
+2. Add the name to `BASIC_COMPONENTS` or `OPTIONAL_COMPONENTS` in `utils/components.sh` and to the help text in `bootstrap.sh`
 3. Update this file's component list
 
 ## Development Guidelines

@@ -11,7 +11,9 @@
 #   --dry-run   Preview changes without applying them
 #
 # Components:
-#   vim, git, tmux, bash, nvm (or 'all' for everything)
+#   basic ones (vim, git, tmux, bash, nvm, pyenv, pipx, uv, rust) are installed
+#   by default; optional ones (gcloud) only when named. `all` = basic + optional.
+#   See utils/components.sh.
 
 set -eu
 
@@ -19,6 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source utilities
 source "$SCRIPT_DIR/utils/detect.sh"
+source "$SCRIPT_DIR/utils/components.sh"
 
 # ============================================================================
 # Main
@@ -42,11 +45,7 @@ main() {
   if [ "$DRY_RUN" = "true" ]; then
     echo "  Dry Run: ENABLED (no changes will be made)"
   fi
-  if [ ${#COMPONENTS[@]} -gt 0 ]; then
-    echo "  Components: ${COMPONENTS[*]}"
-  else
-    echo "  Components: all"
-  fi
+  echo "  Components: $(describe_components)"
   echo "========================================"
   echo ""
 
@@ -100,7 +99,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --uninstall Remove dotfiles and packages"
       echo "  --dry-run   Preview changes without applying them"
       echo ""
-      echo "Components (optional):"
+      echo "Basic components (installed when none are given):"
       echo "  vim         Vim editor with vim-plug"
       echo "  git         Git configuration"
       echo "  tmux        Tmux terminal multiplexer"
@@ -110,29 +109,37 @@ while [[ $# -gt 0 ]]; do
       echo "  pipx        Python application installer"
       echo "  uv          Python package and project manager"
       echo "  rust        Rust programming language (via rustup)"
+      echo ""
+      echo "Optional components (only when named explicitly):"
       echo "  gcloud      Google Cloud CLI (gcloud, gsutil, bq)"
-      echo "  all         All components (default if none specified)"
+      echo ""
+      echo "Selection keywords:"
+      echo "  basic       The basic components (same as giving none)"
+      echo "  all         Basic + optional components"
       echo ""
       echo "Examples:"
-      echo "  $0                         # Install everything"
-      echo "  $0 --dry-run               # Preview installation"
+      echo "  $0                         # Install the basic components"
+      echo "  $0 --dry-run               # Preview that"
+      echo "  $0 gcloud                  # Install only gcloud"
+      echo "  $0 basic gcloud            # Basic components plus gcloud"
+      echo "  $0 all                     # Everything, including optional"
       echo "  $0 --install vim git       # Install only vim and git"
-      echo "  $0 --install bash          # Install only bash"
-      echo "  $0 --install pyenv         # Install only pyenv"
       echo "  $0 --dry-run --install vim # Preview vim installation"
       echo "  $0 --uninstall vim         # Uninstall only vim"
-      echo "  $0 --uninstall             # Uninstall everything"
+      echo "  $0 --uninstall             # Uninstall the basic components"
+      echo "  $0 --uninstall all         # Uninstall everything, including optional"
       exit 0
       ;;
-    vim|git|tmux|bash|nvm|pyenv|pipx|uv|rust|gcloud|all)
-      COMPONENTS+=("$1")
-      shift
-      ;;
     *)
-      echo "Unknown option or component: $1"
-      echo "Usage: $0 [--install|--uninstall] [--dry-run] [components...]"
-      echo "Run '$0 --help' for more information"
-      exit 1
+      if is_valid_component "$1"; then
+        COMPONENTS+=("$1")
+        shift
+      else
+        echo "Unknown option or component: $1"
+        echo "Usage: $0 [--install|--uninstall] [--dry-run] [components...]"
+        echo "Run '$0 --help' for more information"
+        exit 1
+      fi
       ;;
   esac
 done

@@ -12,6 +12,7 @@ source "$PROJECT_ROOT/utils/symlink.sh"
 source "$PROJECT_ROOT/utils/shell.sh"
 source "$PROJECT_ROOT/utils/detect.sh"
 source "$PROJECT_ROOT/utils/sudo.sh"
+source "$PROJECT_ROOT/utils/components.sh"   # should_install_component()
 
 # Homebrew 7 asks "Do you want to proceed? [y/n]" before every install by
 # default (ask mode); disable it so the run never blocks on a prompt.
@@ -156,32 +157,6 @@ remove_gcloud_virtenv() {
   if [ -d "$HOME/.config/gcloud" ]; then
     echo "  Note: ~/.config/gcloud (credentials, configurations) is kept"
   fi
-}
-
-# Check if a component should be processed
-should_install_component() {
-  local component="$1"
-
-  # If no components specified, install all
-  if [ ${#COMPONENTS[@]} -eq 0 ]; then
-    return 0
-  fi
-
-  # Check if 'all' is in components
-  for c in "${COMPONENTS[@]}"; do
-    if [ "$c" = "all" ]; then
-      return 0
-    fi
-  done
-
-  # Check if specific component is in list
-  for c in "${COMPONENTS[@]}"; do
-    if [ "$c" = "$component" ]; then
-      return 0
-    fi
-  done
-
-  return 1
 }
 
 # Ask for the password up front only when a later step will actually need it,
