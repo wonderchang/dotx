@@ -28,11 +28,41 @@ function _rm {
   # Create trash directory if it doesn't exist
   [ ! -d "$trash_dir" ] && mkdir -p "$trash_dir"
 
-  while [ $# -ge 1 ]; do
-    mv -f "$1" "$trash_dir"
-    echo "$1 deleted."
-    shift
+  local arg name dest i force=false end_of_opts=false status=0
+  for arg in "$@"; do
+    # Skip rm options (-r, -f, -rf, ...): moving to trash is always recursive
+    if [ "$end_of_opts" = false ]; then
+      case "$arg" in
+        --) end_of_opts=true; continue ;;
+        -*f*) force=true; continue ;;
+        -?*) continue ;;
+      esac
+    fi
+
+    if [ ! -e "$arg" ] && [ ! -L "$arg" ]; then
+      [ "$force" = true ] || { echo "rm: $arg: No such file or directory" >&2; status=1; }
+      continue
+    fi
+
+    # Never overwrite an earlier file with the same name in the trash
+    name=$(basename -- "$arg")
+    dest="$trash_dir/$name"
+    if [ -e "$dest" ] || [ -L "$dest" ]; then
+      dest="$trash_dir/$name.$(date +%Y%m%d_%H%M%S)"
+      i=1
+      while [ -e "$dest" ] || [ -L "$dest" ]; do
+        dest="$trash_dir/$name.$(date +%Y%m%d_%H%M%S)_$i"
+        i=$((i + 1))
+      done
+    fi
+
+    if command mv -- "$arg" "$dest"; then
+      echo "$arg deleted."
+    else
+      status=1
+    fi
   done
+  return $status
 }
 
 # ============================================================================
