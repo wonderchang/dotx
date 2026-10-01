@@ -168,7 +168,7 @@ fi
 - Installs modern bash via Homebrew (5.x vs system 3.2)
 - Automatically switches from zsh to Homebrew bash
 - Adds bash to `/etc/shells` if needed
-- Runs `chsh` via sudo, so it reuses the password asked once at the start of the run
+- Changes the login shell with `sudo dscl ... UserShell` (not `chsh`: macOS `chsh` asks for the user's password even under sudo), so it reuses the password asked once at the start of the run
 - **Requires terminal restart** for changes to take effect
 
 ## Adding New Components
@@ -190,7 +190,7 @@ fi
 ## Development Guidelines
 
 - **Always add dry-run support** to new operations
-- **Never block on a prompt** - run third-party installers non-interactively (`NONINTERACTIVE=1` for Homebrew, `-y` for rustup/apt, `vim -es` for PlugInstall); the only prompt allowed is the single password request at the start of a run (`request_sudo` in `utils/sudo.sh`, asked only when a later step needs sudo; run anything that needs root through `sudo` so the cached credential is reused)
+- **Never block on a prompt** - run third-party installers non-interactively (`NONINTERACTIVE=1` for the Homebrew installer, `HOMEBREW_NO_ASK=1` for `brew install`, `-y` for rustup/apt, `vim -es` for PlugInstall); the only prompt allowed is the single password request at the start of a run (`request_sudo` in `utils/sudo.sh`, asked only when a later step needs sudo; run anything that needs root through `sudo` so the cached credential is reused)
 - **Use `${DRY_RUN:-false}` pattern** for consistency
 - **Test both dry-run and actual execution** paths
 - **Make scripts idempotent** - safe to run multiple times
@@ -214,4 +214,4 @@ fi
 **Shell switching fails (macOS):**
 - Ensure Homebrew bash installed first
 - Check `/etc/shells` contains Homebrew bash path
-- Restart terminal after `chsh`
+- Restart terminal after the shell change

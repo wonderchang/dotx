@@ -13,6 +13,10 @@ source "$PROJECT_ROOT/utils/shell.sh"
 source "$PROJECT_ROOT/utils/detect.sh"
 source "$PROJECT_ROOT/utils/sudo.sh"
 
+# Homebrew 7 asks "Do you want to proceed? [y/n]" before every install by
+# default (ask mode); disable it so the run never blocks on a prompt.
+export HOMEBREW_NO_ASK=1
+
 # Component list to install/uninstall
 COMPONENTS=()
 

@@ -2,7 +2,7 @@
 # utils/sudo.sh
 # Ask for the administrator password once, then keep sudo's credential cache
 # alive for the rest of the run so later steps (Homebrew installer, /etc/shells,
-# chsh, apt-get) never prompt again.
+# dscl/chsh, apt-get) never prompt again.
 #
 # Usage:
 #   source utils/sudo.sh

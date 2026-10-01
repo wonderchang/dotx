@@ -23,6 +23,21 @@ homebrew_bash_path() {
   echo ""
 }
 
+# Change the login shell without any extra prompt.
+# macOS `chsh` authenticates through Open Directory and asks for the user's
+# password even when run as root, so it is bypassed with `dscl`, which only
+# needs the sudo credential cached at the start of the run.
+# On Linux, `chsh` run as root does not prompt.
+set_login_shell() {
+  local target_shell="$1"
+
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sudo dscl . -create "/Users/$(id -un)" UserShell "$target_shell"
+  else
+    sudo chsh -s "$target_shell" "$(id -un)"
+  fi
+}
+
 switch_to_bash() {
   local current_shell=$(get_current_shell)
   local bash_path
@@ -61,7 +76,7 @@ switch_to_bash() {
     echo "  [DRY-RUN] Would switch default shell to bash"
     echo "      Current: $current_shell"
     echo "      New:     $bash_path"
-    echo "      Command: chsh -s $bash_path"
+    echo "      Command: set_login_shell $bash_path"
   else
     echo "  Switching default shell to bash..."
     echo "      Current: $current_shell"
@@ -74,9 +89,8 @@ switch_to_bash() {
       echo "$bash_path" | sudo tee -a /etc/shells >/dev/null
     fi
 
-    # Change shell via sudo: reuses the password entered at the start of the
-    # run instead of chsh asking for it again.
-    sudo chsh -s "$bash_path" "$(id -un)"
+    # Reuses the password entered at the start of the run (no chsh prompt)
+    set_login_shell "$bash_path"
 
     if [ $? -eq 0 ]; then
       echo ""
@@ -100,7 +114,7 @@ restore_shell() {
     return 1
   fi
 
-  # Check if already using the target shell (chsh would ask for a password)
+  # Check if already using the target shell
   if [ "$(get_current_shell)" = "$target_shell" ]; then
     echo "  ✓ Default shell is already: $target_shell"
     return 0
@@ -110,7 +124,7 @@ restore_shell() {
     echo "  [DRY-RUN] Would restore default shell to: $target_shell"
   else
     echo "  Restoring default shell to: $target_shell"
-    sudo chsh -s "$target_shell" "$(id -un)"
+    set_login_shell "$target_shell"
 
     if [ $? -eq 0 ]; then
       echo "  ✓ Default shell restored"
