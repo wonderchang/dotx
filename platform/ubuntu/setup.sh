@@ -131,6 +131,11 @@ install_ubuntu() {
     echo ""
   fi
 
+  if should_install_component "aws"; then
+    bash "$SCRIPT_DIR/aws.sh" install
+    echo ""
+  fi
+
   echo "========================================"
   echo "  ✓ Ubuntu Setup Complete!"
   echo "========================================"
@@ -207,6 +212,11 @@ uninstall_ubuntu() {
 
   if should_install_component "gcloud"; then
     bash "$SCRIPT_DIR/gcloud.sh" uninstall
+    echo ""
+  fi
+
+  if should_install_component "aws"; then
+    bash "$SCRIPT_DIR/aws.sh" uninstall
     echo ""
   fi
 

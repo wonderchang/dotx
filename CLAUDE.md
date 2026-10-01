@@ -42,7 +42,7 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ```
 
 **Basic components (default):** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`
-**Optional components (only when named):** `gcloud`
+**Optional components (only when named):** `gcloud`, `aws`
 **Keywords:** `basic` (the default set), `all` (basic + optional)
 
 ## Directory Structure
@@ -61,7 +61,7 @@ dotx/
 │   └── rust/                       # Rust installer (rustup)
 ├── platform/
 │   ├── macos/                      # macOS setup + Homebrew + iTerm2 font
-│   └── ubuntu/                     # Ubuntu setup + APT + gcloud APT repo
+│   └── ubuntu/                     # Ubuntu setup + APT + gcloud APT repo + aws installer
 └── utils/                          # Shared utilities
     ├── detect.sh                   # Platform detection
     ├── shell.sh                    # Shell switching
@@ -111,10 +111,12 @@ fi
 - Links iTerm2 Dynamic Profiles from `platform/macos/iterm2/*.json` (e.g. Smyck color scheme, inherits from Default) into `~/Library/Application Support/iTerm2/DynamicProfiles/`; hot-reloaded, works while iTerm2 is running
 - Sets the Smyck dynamic profile as iTerm2's default profile via `defaults`; skipped while iTerm2 is running (it reads the default only at launch), previous default restored on uninstall
 - `gcloud` is the Homebrew cask `gcloud-cli` (`install_brew_cask()`), which pulls in `python@3.14`, builds `~/.config/gcloud/virtenv` on it and links gcloud/gsutil/bq into Homebrew's bin (the cask keeps a pre-existing virtenv untouched, so `ensure_gcloud_virtenv()` rebuilds one that is not on Homebrew Python); uninstall uses `brew uninstall --cask --zap` (a plain uninstall leaves `share/google-cloud-sdk` behind) and removes the virtenv, but keeps the rest of `~/.config/gcloud` (credentials). Not the tarball: on Apple Silicon the tarball has no bundled Python and `install.sh --install-python` installs python.org Python system-wide with sudo
+- `aws` is the Homebrew formula `awscli` (v2, `aws` + `aws_completer` in Homebrew's bin); `~/.aws` is never touched. Completion for both platforms is registered in `common/bash/.bashrc` via `complete -C aws_completer aws`
 
 **Ubuntu specifics:**
 - Runs `apt-get update` and installs base prerequisites `curl` and `git` first (via `apt.sh`); the `git` component only manages `.gitconfig` and never removes the git package
 - Uses `install_apt_package()` helper
+- `aws` uses the official AWS CLI v2 zip installer (`aws.sh`) into `~/.local/aws-cli` with symlinks in `~/.local/bin`, no sudo except `apt-get install unzip`; Ubuntu's APT `awscli` is v1 on 22.04. `~/.aws` is never touched
 - `gcloud` comes from Google's APT repo (`gcloud.sh`): signing key in `/usr/share/keyrings/cloud.google.gpg`, source list in `/etc/apt/sources.list.d/google-cloud-sdk.list`, package `google-cloud-cli`; the APT build disables `gcloud components`, add-ons are `google-cloud-cli-*` packages and are all removed on uninstall together with the key and source list
 
 ### Dry-Run Support
@@ -145,9 +147,11 @@ fi
 **Platform-specific configs:**
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
 
-**macOS packages (Homebrew):** bash, tmux, pipx, gcloud-cli (cask)
+**macOS packages (Homebrew):** bash, tmux, pipx, gcloud-cli (cask), awscli
 
-**Ubuntu packages (APT):** vim, git, tmux, pipx, google-cloud-cli (from Google's APT repo)
+**Ubuntu packages (APT):** vim, git, tmux, pipx, google-cloud-cli (from Google's APT repo), unzip (for the aws installer)
+
+**Ubuntu user-level installs:** aws → `~/.local/aws-cli` with `aws`/`aws_completer` in `~/.local/bin` (official AWS installer, no sudo)
 
 ## Important Notes
 

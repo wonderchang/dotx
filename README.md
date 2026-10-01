@@ -57,6 +57,7 @@ cd ~/dotx
 - **uv** - Python package and project manager
 - **rust** - Rust toolchain via rustup
 - **gcloud** - Google Cloud CLI (gcloud, gsutil, bq)
+- **aws** - AWS CLI v2
 
 **Configurations:**
 - Cross-platform dotfiles (`.vimrc`, `.gitconfig`, `.tmux.conf`, `.bashrc`)
@@ -121,6 +122,7 @@ Basic components are installed by a plain `./bootstrap.sh`; optional ones only w
 | `uv` | basic | Python package/project manager |
 | `rust` | basic | Rust toolchain (rustup) |
 | `gcloud` | optional | Google Cloud CLI |
+| `aws` | optional | AWS CLI v2 |
 | `basic` | keyword | The basic components (default) |
 | `all` | keyword | Basic + optional components |
 

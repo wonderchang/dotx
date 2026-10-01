@@ -280,6 +280,14 @@ install_macos() {
     echo ""
   fi
 
+  if should_install_component "aws"; then
+    echo "=== AWS CLI ==="
+    # Formula awscli is v2; installs aws + aws_completer into Homebrew's bin.
+    # Completion is wired up in common/bash/.bashrc via aws_completer.
+    install_brew_package "awscli"
+    echo ""
+  fi
+
   echo "========================================"
   echo "  ✓ macOS Setup Complete!"
   echo "========================================"
@@ -349,6 +357,15 @@ uninstall_macos() {
     echo "=== Google Cloud CLI ==="
     uninstall_brew_cask "gcloud-cli"
     remove_gcloud_virtenv
+    echo ""
+  fi
+
+  if should_install_component "aws"; then
+    echo "=== AWS CLI ==="
+    uninstall_brew_package "awscli"
+    if [ -d "$HOME/.aws" ]; then
+      echo "  Note: ~/.aws (credentials, config) is kept"
+    fi
     echo ""
   fi
 

@@ -187,6 +187,16 @@ PATH=$(printf '%s' "$PATH" | awk -v RS=: -v ORS=: '!seen[$0]++')
 export PATH="${PATH%:}"
 
 # ============================================================================
+# AWS CLI
+# ============================================================================
+
+# aws_completer comes with the CLI (Homebrew bin on macOS, ~/.local/bin on
+# Ubuntu); .bashrc does not load bash-completion, so register it directly
+if command -v aws_completer >/dev/null 2>&1; then
+  complete -C "$(command -v aws_completer)" aws
+fi
+
+# ============================================================================
 # Claude Code
 # ============================================================================
 
