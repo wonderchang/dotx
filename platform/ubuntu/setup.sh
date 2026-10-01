@@ -27,7 +27,7 @@ install_apt_package() {
       echo "[DRY-RUN] Would install $package via APT"
     else
       echo "Installing $package..."
-      sudo apt-get install -y "$package"
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$package"
       echo "✓ $package installed"
     fi
   fi

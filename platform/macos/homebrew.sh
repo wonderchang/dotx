@@ -55,7 +55,9 @@ install_homebrew() {
   echo "You may be prompted for your password."
   echo ""
 
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  # NONINTERACTIVE=1 skips the installer's "Press RETURN to continue" prompt;
+  # sudo still asks for the password when needed.
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
   # Verify installation (the installer does not update this shell's PATH)
   load_brew_shellenv

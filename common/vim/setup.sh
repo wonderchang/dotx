@@ -49,7 +49,9 @@ install_vim_setup() {
     echo "[DRY-RUN] Would install vim plugins via PlugInstall"
   else
     echo "Installing vim plugins..."
-    vim -c 'PlugInstall' -c 'qa!' || true
+    # Headless Ex mode (-es): no full-screen UI, no "Press ENTER" prompts.
+    # --sync blocks until every plugin is installed before qa! runs.
+    vim -es -u "$HOME/.vimrc" -i NONE -c 'PlugInstall --sync' -c 'qa!' || true
     echo "✓ Vim plugins installed"
   fi
   echo ""

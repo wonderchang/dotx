@@ -10,7 +10,7 @@ update_apt() {
   if [ "${DRY_RUN:-false}" = "true" ]; then
     echo "[DRY-RUN] Would run: sudo apt-get update"
   else
-    sudo apt-get update
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update
     echo "✓ APT updated"
   fi
   echo ""
@@ -32,7 +32,7 @@ install_prerequisites() {
       echo "[DRY-RUN] Would install $package via APT"
     else
       echo "Installing $package..."
-      sudo apt-get install -y "$package"
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$package"
       echo "✓ $package installed"
     fi
   done

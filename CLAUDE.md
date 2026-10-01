@@ -189,6 +189,7 @@ fi
 ## Development Guidelines
 
 - **Always add dry-run support** to new operations
+- **Never block on a prompt** - run third-party installers non-interactively (`NONINTERACTIVE=1` for Homebrew, `-y` for rustup/apt, `vim -es` for PlugInstall); only sudo/chsh password prompts are allowed, and they must be announced first
 - **Use `${DRY_RUN:-false}` pattern** for consistency
 - **Test both dry-run and actual execution** paths
 - **Make scripts idempotent** - safe to run multiple times
