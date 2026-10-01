@@ -44,8 +44,10 @@ iterm2_installed() {
   [ -d "$ITERM2_APP" ]
 }
 
+# pgrep cannot see the iTerm2 main process on recent macOS (even with -f or
+# a full path), while ps still lists it, so match the executable path via ps
 iterm2_running() {
-  pgrep -x iTerm2 &>/dev/null
+  ps -axo comm= | grep -qx "$ITERM2_APP/Contents/MacOS/iTerm2"
 }
 
 # Print index of the default profile in "New Bookmarks" (empty if not found)
@@ -331,6 +333,15 @@ uninstall_default_profile() {
 
 uninstall_dynamic_profiles() {
   echo "=== iTerm2 Dynamic Profiles Uninstall ==="
+
+  # If the default profile restore above was skipped, unlinking the default
+  # dynamic profile would make iTerm2 pick a new default on its own
+  if iterm2_running && [ -n "$(default_dynamic_profile)" ]; then
+    echo "⚠ iTerm2 is running and its default profile is still a dotx profile; skipping"
+    echo "  Quit iTerm2 and re-run from Terminal.app: ./bootstrap.sh --uninstall tmux"
+    echo ""
+    return 0
+  fi
 
   local profile
   for profile in "$PROFILES_SRC_DIR"/*.json; do
