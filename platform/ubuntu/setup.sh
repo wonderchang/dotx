@@ -129,7 +129,11 @@ install_ubuntu() {
   fi
 
   if should_install_component "pipx"; then
-    bash "$PROJECT_ROOT/common/pipx/setup.sh" install
+    echo "=== pipx ==="
+    # Package manager install: `pip install --user` is blocked by PEP 668
+    # on Homebrew Python and Ubuntu 23.04+ / Debian 12.
+    # ~/.local/bin is already on PATH via .bashrc, so no `pipx ensurepath`.
+    install_apt_package "pipx"
     echo ""
   fi
 
@@ -199,7 +203,8 @@ uninstall_ubuntu() {
   fi
 
   if should_install_component "pipx"; then
-    bash "$PROJECT_ROOT/common/pipx/setup.sh" uninstall
+    echo "=== pipx ==="
+    uninstall_apt_package "pipx"
     echo ""
   fi
 

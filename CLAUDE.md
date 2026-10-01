@@ -55,7 +55,6 @@ dotx/
 │   ├── tmux/                       # Tmux config + powerline fonts
 │   ├── nvm/                        # NVM installer
 │   ├── pyenv/                      # pyenv installer
-│   ├── pipx/                       # pipx installer
 │   ├── uv/                         # uv installer
 │   └── rust/                       # Rust installer (rustup)
 ├── platform/
@@ -133,14 +132,14 @@ fi
 
 **Cross-platform configs (symlinked):**
 - `~/.vimrc`, `~/.gitconfig`, `~/.tmux.conf`, `~/.bashrc`
-- vim-plug, bash-git-prompt, powerline fonts, nvm, pyenv, pipx, uv, rust
+- vim-plug, bash-git-prompt, powerline fonts, nvm, pyenv, uv, rust
 
 **Platform-specific configs:**
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
 
-**macOS packages (Homebrew):** bash, tmux
+**macOS packages (Homebrew):** bash, tmux, pipx
 
-**Ubuntu packages (APT):** vim, git, tmux
+**Ubuntu packages (APT):** vim, git, tmux, pipx
 
 ## Important Notes
 
