@@ -22,6 +22,10 @@ switch_to_bash() {
       bash_path="/opt/homebrew/bin/bash"
     elif command -v /usr/local/bin/bash &>/dev/null; then
       bash_path="/usr/local/bin/bash"
+    elif [ "${DRY_RUN:-false}" = "true" ]; then
+      # In dry-run the brew install above was only previewed
+      echo "  [DRY-RUN] Would switch default shell to Homebrew bash once installed"
+      return 0
     else
       echo "  ✗ Error: Homebrew bash not found"
       echo "  Please install bash via Homebrew first: brew install bash"
