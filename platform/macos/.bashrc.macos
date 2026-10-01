@@ -12,14 +12,18 @@ export TRASH_DIR="$HOME/.Trash"
 # ============================================================================
 
 # Initialize Homebrew environment (/opt/homebrew on Apple Silicon,
-# /usr/local on Intel)
-for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
-  if [ -x "$brew_bin" ]; then
-    eval "$("$brew_bin" shellenv)"
-    break
-  fi
-done
-unset brew_bin
+# /usr/local on Intel). Only once: `brew shellenv` has no duplicate guard,
+# so nested shells (tmux, `bash` inside bash) inherit it instead of
+# prepending /opt/homebrew/bin to PATH again.
+if [ -z "${HOMEBREW_PREFIX:-}" ]; then
+  for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [ -x "$brew_bin" ]; then
+      eval "$("$brew_bin" shellenv)"
+      break
+    fi
+  done
+  unset brew_bin
+fi
 
 # ============================================================================
 # Aliases

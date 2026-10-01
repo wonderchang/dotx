@@ -176,6 +176,17 @@ if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]] && [ -d "$HOME/.cargo/bin" ]; then
 fi
 
 # ============================================================================
+# PATH Cleanup
+# ============================================================================
+
+# Drop repeated entries, keeping the first occurrence (highest priority).
+# macOS path_helper appends /opt/homebrew/bin via /etc/paths.d/homebrew
+# after `brew shellenv` already prepended it, and pyenv re-adds its bin
+# in nested shells; the result must not depend on how many shells deep we are.
+PATH=$(printf '%s' "$PATH" | awk -v RS=: -v ORS=: '!seen[$0]++')
+export PATH="${PATH%:}"
+
+# ============================================================================
 # Claude Code
 # ============================================================================
 
