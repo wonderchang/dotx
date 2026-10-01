@@ -190,7 +190,7 @@ fi
 ## Development Guidelines
 
 - **Always add dry-run support** to new operations
-- **Never block on a prompt** - run third-party installers non-interactively (`NONINTERACTIVE=1` for the Homebrew installer, `HOMEBREW_NO_ASK=1` for `brew install`, `-y` for rustup/apt, `vim -es` for PlugInstall); the only prompt allowed is the single password request at the start of a run (`request_sudo` in `utils/sudo.sh`, asked only when a later step needs sudo; run anything that needs root through `sudo` so the cached credential is reused)
+- **Never block on a prompt** - run third-party installers non-interactively (`NONINTERACTIVE=1` for the Homebrew installer, `HOMEBREW_NO_ASK=1` for `brew install`, `-y` for rustup/apt, `vim -es` for PlugInstall); the only prompt allowed is the single password request at the start of a run (`request_sudo` in `utils/sudo.sh`, asked only when a later step needs sudo; run anything that needs root through `sudo` so the cached credential is reused; `HOMEBREW_NO_SUDO=1` is exported on macOS because every `brew` command otherwise runs `sudo --reset-timestamp` and wipes that cache)
 - **Use `${DRY_RUN:-false}` pattern** for consistency
 - **Quiet curl output** - `curl -fsSL url | bash` for installer scripts (no transfer table, HTTP errors fail instead of piping an error page into bash); `curl -fSL --progress-bar -o file url` when downloading an actual file
 - **Test both dry-run and actual execution** paths

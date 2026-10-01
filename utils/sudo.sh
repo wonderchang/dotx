@@ -9,6 +9,9 @@
 #   request_sudo "reason shown to the user"
 #
 # The password itself is never stored; only sudo's own timestamp is refreshed.
+#
+# Anything run later must not reset that timestamp: `brew` does so on every
+# invocation unless HOMEBREW_NO_SUDO=1 is exported (platform/macos/setup.sh).
 
 # ============================================================================
 # Sudo Session

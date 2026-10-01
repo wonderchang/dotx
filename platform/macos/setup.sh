@@ -17,6 +17,12 @@ source "$PROJECT_ROOT/utils/sudo.sh"
 # default (ask mode); disable it so the run never blocks on a prompt.
 export HOMEBREW_NO_ASK=1
 
+# Every `brew` command runs `sudo --reset-timestamp` on startup, which throws
+# away the password cached by request_sudo and makes the later shell switch
+# (`sudo dscl`) ask again. Formulae never need sudo, so tell brew not to touch
+# sudo at all (documented variable, see `brew help`/env_config.rb).
+export HOMEBREW_NO_SUDO=1
+
 # Component list to install/uninstall
 COMPONENTS=()
 
