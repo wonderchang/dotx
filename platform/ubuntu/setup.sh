@@ -151,6 +151,11 @@ install_ubuntu() {
     echo ""
   fi
 
+  if should_install_component "gcloud"; then
+    bash "$SCRIPT_DIR/gcloud.sh" install
+    echo ""
+  fi
+
   echo "========================================"
   echo "  ✓ Ubuntu Setup Complete!"
   echo "========================================"
@@ -222,6 +227,11 @@ uninstall_ubuntu() {
 
   if should_install_component "rust"; then
     bash "$PROJECT_ROOT/common/rust/setup.sh" uninstall
+    echo ""
+  fi
+
+  if should_install_component "gcloud"; then
+    bash "$SCRIPT_DIR/gcloud.sh" uninstall
     echo ""
   fi
 

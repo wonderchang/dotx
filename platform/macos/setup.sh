@@ -62,6 +62,102 @@ uninstall_brew_package() {
   fi
 }
 
+# Casks that only copy files under $(brew --prefix) and run user-level
+# scripts (like gcloud-cli) need no sudo, so they work with HOMEBREW_NO_SUDO.
+install_brew_cask() {
+  local cask="$1"
+
+  if brew list --cask "$cask" &>/dev/null; then
+    echo "✓ $cask already installed"
+  else
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would install cask $cask via Homebrew"
+    else
+      echo "Installing $cask..."
+      brew install --cask "$cask"
+      echo "✓ $cask installed"
+    fi
+  fi
+}
+
+# --zap also removes what the cask's zap stanza lists (for gcloud-cli the
+# whole $(brew --prefix)/share/google-cloud-sdk tree); a plain uninstall
+# would leave it behind.
+uninstall_brew_cask() {
+  local cask="$1"
+
+  if brew list --cask "$cask" &>/dev/null; then
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "[DRY-RUN] Would uninstall cask $cask via Homebrew (--zap)"
+    else
+      echo "Uninstalling $cask..."
+      brew uninstall --cask --zap "$cask"
+      echo "✓ $cask uninstalled"
+    fi
+  else
+    echo "✓ $cask not installed"
+  fi
+}
+
+# The gcloud-cli cask runs gcloud on a Python virtualenv under ~/.config/gcloud
+# built from the python@3.x formula the cask depends on. Its postflight only
+# builds that virtualenv when none exists yet: one left over from a hand
+# install (e.g. on python.org Python) is kept as is, so check what the
+# virtualenv points at and rebuild it on Homebrew Python when it does not.
+ensure_gcloud_virtenv() {
+  local virtenv="$HOME/.config/gcloud/virtenv"
+  local formula python home
+
+  formula=$(brew info --json=v2 --cask gcloud-cli 2>/dev/null \
+    | grep -o '"python@3[.0-9]*"' | head -1 | tr -d '"')
+  python="$(brew --prefix)/opt/${formula:-python@3.14}/libexec/bin/python"
+
+  home=$(sed -n 's/^home = //p' "$virtenv/pyvenv.cfg" 2>/dev/null || true)
+  if [ -n "$home" ] && [ -f "$virtenv/enabled" ] && [[ "$home" == "$(brew --prefix)/"* ]]; then
+    echo "✓ gcloud virtualenv already on Homebrew Python: $home"
+    return 0
+  fi
+
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would rebuild ~/.config/gcloud/virtenv on $python"
+    return 0
+  fi
+
+  if [ ! -x "$python" ]; then
+    echo "  ✗ Homebrew Python not found: $python (is the gcloud-cli cask installed?)"
+    return 1
+  fi
+
+  echo "Rebuilding gcloud virtualenv on $python..."
+  echo "  (current: ${home:-none})"
+  if [ -d "$virtenv" ]; then
+    CLOUDSDK_PYTHON="$python" gcloud config virtualenv delete --quiet
+  fi
+  CLOUDSDK_PYTHON="$python" gcloud config virtualenv create --python-to-use "$python" --quiet
+  CLOUDSDK_PYTHON="$python" gcloud config virtualenv enable --quiet
+  echo "✓ gcloud virtualenv rebuilt"
+}
+
+# The gcloud-cli cask runs gcloud on a Python virtualenv it creates under
+# ~/.config/gcloud (backed by Homebrew Python). Remove that virtualenv,
+# but keep the rest of ~/.config/gcloud: credentials and configurations were
+# created by `gcloud auth`/`gcloud config`, not by dotx.
+remove_gcloud_virtenv() {
+  local virtenv="$HOME/.config/gcloud/virtenv"
+
+  if [ -d "$virtenv" ]; then
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would remove gcloud virtualenv: ~/.config/gcloud/virtenv"
+    else
+      rm -rf "$virtenv"
+      echo "  Removed gcloud virtualenv: ~/.config/gcloud/virtenv"
+    fi
+  fi
+  if [ -d "$HOME/.config/gcloud" ]; then
+    echo "  Note: ~/.config/gcloud (credentials, configurations) is kept"
+  fi
+}
+
 # Check if a component should be processed
 should_install_component() {
   local component="$1"
@@ -199,6 +295,16 @@ install_macos() {
     echo ""
   fi
 
+  if should_install_component "gcloud"; then
+    echo "=== Google Cloud CLI ==="
+    # The cask pulls in python@3.14, creates ~/.config/gcloud/virtenv on it,
+    # and links gcloud/gsutil/bq into $(brew --prefix)/bin (already on PATH).
+    # Completion is wired up in .bashrc.macos.
+    install_brew_cask "gcloud-cli"
+    ensure_gcloud_virtenv
+    echo ""
+  fi
+
   echo "========================================"
   echo "  ✓ macOS Setup Complete!"
   echo "========================================"
@@ -261,6 +367,13 @@ uninstall_macos() {
 
   if should_install_component "rust"; then
     bash "$PROJECT_ROOT/common/rust/setup.sh" uninstall
+    echo ""
+  fi
+
+  if should_install_component "gcloud"; then
+    echo "=== Google Cloud CLI ==="
+    uninstall_brew_cask "gcloud-cli"
+    remove_gcloud_virtenv
     echo ""
   fi
 

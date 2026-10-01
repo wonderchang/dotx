@@ -110,6 +110,7 @@ while [[ $# -gt 0 ]]; do
       echo "  pipx        Python application installer"
       echo "  uv          Python package and project manager"
       echo "  rust        Rust programming language (via rustup)"
+      echo "  gcloud      Google Cloud CLI (gcloud, gsutil, bq)"
       echo "  all         All components (default if none specified)"
       echo ""
       echo "Examples:"
@@ -123,7 +124,7 @@ while [[ $# -gt 0 ]]; do
       echo "  $0 --uninstall             # Uninstall everything"
       exit 0
       ;;
-    vim|git|tmux|bash|nvm|pyenv|pipx|uv|rust|all)
+    vim|git|tmux|bash|nvm|pyenv|pipx|uv|rust|gcloud|all)
       COMPONENTS+=("$1")
       shift
       ;;

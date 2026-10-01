@@ -26,3 +26,19 @@ unset brew_bin
 # ============================================================================
 
 alias td='open -a TextEdit'
+
+# ============================================================================
+# Google Cloud CLI (Homebrew cask gcloud-cli)
+# ============================================================================
+
+# gcloud/gsutil/bq are linked into Homebrew's bin already; components added
+# later with `gcloud components install` land in the SDK's own bin
+if [ -n "${HOMEBREW_PREFIX:-}" ] && [ -d "$HOMEBREW_PREFIX/share/google-cloud-sdk/bin" ] \
+   && [[ ":$PATH:" != *":$HOMEBREW_PREFIX/share/google-cloud-sdk/bin:"* ]]; then
+  export PATH="$PATH:$HOMEBREW_PREFIX/share/google-cloud-sdk/bin"
+fi
+
+# .bashrc does not load bash-completion, so source gcloud's completion directly
+if [ -n "${HOMEBREW_PREFIX:-}" ] && [ -f "$HOMEBREW_PREFIX/etc/bash_completion.d/google-cloud-sdk" ]; then
+  source "$HOMEBREW_PREFIX/etc/bash_completion.d/google-cloud-sdk"
+fi

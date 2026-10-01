@@ -41,7 +41,7 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ./bootstrap.sh --help
 ```
 
-**Available components:** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`, `all`
+**Available components:** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`, `gcloud`, `all`
 
 ## Directory Structure
 
@@ -59,7 +59,7 @@ dotx/
 │   └── rust/                       # Rust installer (rustup)
 ├── platform/
 │   ├── macos/                      # macOS setup + Homebrew + iTerm2 font
-│   └── ubuntu/                     # Ubuntu setup + APT
+│   └── ubuntu/                     # Ubuntu setup + APT + gcloud APT repo
 └── utils/                          # Shared utilities
     ├── detect.sh                   # Platform detection
     ├── shell.sh                    # Shell switching
@@ -105,10 +105,12 @@ fi
 - Sets iTerm2 default profile font to Source Code Pro for Powerline (via `iterm2.sh`, part of `tmux`); skipped while iTerm2 is running or if a Powerline/Nerd font is already set, restored on uninstall
 - Links iTerm2 Dynamic Profiles from `platform/macos/iterm2/*.json` (e.g. Smyck color scheme, inherits from Default) into `~/Library/Application Support/iTerm2/DynamicProfiles/`; hot-reloaded, works while iTerm2 is running
 - Sets the Smyck dynamic profile as iTerm2's default profile via `defaults`; skipped while iTerm2 is running (it reads the default only at launch), previous default restored on uninstall
+- `gcloud` is the Homebrew cask `gcloud-cli` (`install_brew_cask()`), which pulls in `python@3.14`, builds `~/.config/gcloud/virtenv` on it and links gcloud/gsutil/bq into Homebrew's bin (the cask keeps a pre-existing virtenv untouched, so `ensure_gcloud_virtenv()` rebuilds one that is not on Homebrew Python); uninstall uses `brew uninstall --cask --zap` (a plain uninstall leaves `share/google-cloud-sdk` behind) and removes the virtenv, but keeps the rest of `~/.config/gcloud` (credentials). Not the tarball: on Apple Silicon the tarball has no bundled Python and `install.sh --install-python` installs python.org Python system-wide with sudo
 
 **Ubuntu specifics:**
 - Runs `apt-get update` and installs base prerequisites `curl` and `git` first (via `apt.sh`); the `git` component only manages `.gitconfig` and never removes the git package
 - Uses `install_apt_package()` helper
+- `gcloud` comes from Google's APT repo (`gcloud.sh`): signing key in `/usr/share/keyrings/cloud.google.gpg`, source list in `/etc/apt/sources.list.d/google-cloud-sdk.list`, package `google-cloud-cli`; the APT build disables `gcloud components`, add-ons are `google-cloud-cli-*` packages and are all removed on uninstall together with the key and source list
 
 ### Dry-Run Support
 
@@ -138,9 +140,9 @@ fi
 **Platform-specific configs:**
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
 
-**macOS packages (Homebrew):** bash, tmux, pipx
+**macOS packages (Homebrew):** bash, tmux, pipx, gcloud-cli (cask)
 
-**Ubuntu packages (APT):** vim, git, tmux, pipx
+**Ubuntu packages (APT):** vim, git, tmux, pipx, google-cloud-cli (from Google's APT repo)
 
 ## Important Notes
 

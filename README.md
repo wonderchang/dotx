@@ -55,6 +55,8 @@ cd ~/dotx
 - **pyenv** - Python version manager
 - **pipx** - Python application installer
 - **uv** - Python package and project manager
+- **rust** - Rust toolchain via rustup
+- **gcloud** - Google Cloud CLI (gcloud, gsutil, bq)
 
 **Configurations:**
 - Cross-platform dotfiles (`.vimrc`, `.gitconfig`, `.tmux.conf`, `.bashrc`)
@@ -110,6 +112,8 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 | `pyenv` | Python version manager |
 | `pipx` | Python app installer |
 | `uv` | Python package/project manager |
+| `rust` | Rust toolchain (rustup) |
+| `gcloud` | Google Cloud CLI |
 | `all` | All components (default) |
 
 ## Platform Support

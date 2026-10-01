@@ -42,3 +42,12 @@ fi
 if [ -d /snap/bin ]; then
     export PATH="/snap/bin:$PATH"
 fi
+
+# ============================================================================
+# Google Cloud CLI (APT package google-cloud-cli)
+# ============================================================================
+
+# .bashrc does not load bash-completion, so source gcloud's completion directly
+if [ -f /usr/lib/google-cloud-sdk/completion.bash.inc ]; then
+    source /usr/lib/google-cloud-sdk/completion.bash.inc
+fi
