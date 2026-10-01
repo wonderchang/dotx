@@ -69,6 +69,20 @@ default_profile_index() {
   done
 }
 
+# Print name of the dotx dynamic profile set as default (empty if none)
+default_dynamic_profile() {
+  local default_guid
+  default_guid=$(defaults read "$ITERM2_DOMAIN" "Default Bookmark Guid" 2>/dev/null) || return 0
+
+  local profile
+  for profile in "$PROFILES_SRC_DIR"/*.json; do
+    if grep -q "\"Guid\": \"$default_guid\"" "$profile"; then
+      basename "$profile" .json
+      return 0
+    fi
+  done
+}
+
 print_manual_instructions() {
   echo "  To set it manually: iTerm2 → Settings → Profiles → Text → Font"
   echo "  → choose 'Source Code Pro for Powerline'"
@@ -90,7 +104,13 @@ set_default_profile_font() {
   local idx
   idx=$(default_profile_index "$tmp_plist")
   if [ -z "$idx" ]; then
-    echo "⚠ iTerm2 default profile not found (open iTerm2 once to create it)"
+    local dynamic
+    dynamic=$(default_dynamic_profile)
+    if [ -n "$dynamic" ]; then
+      echo "✓ iTerm2 default profile is dotx dynamic profile '$dynamic' (font set in its JSON)"
+    else
+      echo "⚠ iTerm2 default profile not found (open iTerm2 once to create it)"
+    fi
     rm -rf "$tmp_dir"
     return 0
   fi
@@ -185,6 +205,15 @@ install_iterm2_font() {
 
   if ! iterm2_installed; then
     echo "✓ iTerm2 not installed, skipping"
+    echo ""
+    return 0
+  fi
+
+  # Dynamic profiles carry their own font, so there is nothing to change
+  local dynamic
+  dynamic=$(default_dynamic_profile)
+  if [ -n "$dynamic" ]; then
+    echo "✓ iTerm2 default profile is dotx dynamic profile '$dynamic' (font set in its JSON)"
     echo ""
     return 0
   fi
