@@ -106,7 +106,7 @@ fi
 - Sets the Smyck dynamic profile as iTerm2's default profile via `defaults`; skipped while iTerm2 is running (it reads the default only at launch), previous default restored on uninstall
 
 **Ubuntu specifics:**
-- Runs `apt-get update` first (via `apt.sh`)
+- Runs `apt-get update` and installs base prerequisites `curl` and `git` first (via `apt.sh`); the `git` component only manages `.gitconfig` and never removes the git package
 - Uses `install_apt_package()` helper
 
 ### Dry-Run Support

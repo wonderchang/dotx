@@ -81,7 +81,7 @@ install_ubuntu() {
   echo "========================================"
   echo ""
 
-  # 1. Update APT
+  # 1. Update APT and install base prerequisites (curl, git)
   bash "$SCRIPT_DIR/apt.sh"
 
   # 2. Install tools with their packages
@@ -170,7 +170,7 @@ uninstall_ubuntu() {
   if should_install_component "git"; then
     echo "=== Git ==="
     bash "$PROJECT_ROOT/common/git/setup.sh" uninstall
-    uninstall_apt_package "git"
+    # Note: Not uninstalling git (base prerequisite installed by apt.sh)
     echo ""
   fi
 
