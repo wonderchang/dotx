@@ -198,28 +198,6 @@ uninstall_macos() {
     echo ""
   fi
 
-  if should_install_component "bash"; then
-    echo "=== Bash ==="
-
-    # 1. Restore shell to zsh (macOS default)
-    echo "=== Restoring Default Shell to Zsh ==="
-    restore_shell "/bin/zsh"
-    echo ""
-
-    # 2. Remove bash configurations
-    bash "$PROJECT_ROOT/common/bash/setup.sh" uninstall
-
-    # 3. Remove platform-specific bash configuration
-    echo "=== macOS-Specific Bash Uninstall ==="
-    remove_symlink "$HOME/.bashrc.local"
-    echo ""
-
-    # 4. Uninstall Homebrew bash
-    echo "Uninstalling Homebrew bash..."
-    uninstall_brew_package "bash"
-    echo ""
-  fi
-
   if should_install_component "nvm"; then
     echo "=== NVM ==="
     bash "$PROJECT_ROOT/common/nvm/setup.sh" uninstall
@@ -244,6 +222,30 @@ uninstall_macos() {
 
   if should_install_component "rust"; then
     bash "$PROJECT_ROOT/common/rust/setup.sh" uninstall
+    echo ""
+  fi
+
+  # Last: removing Homebrew bash breaks later `bash .../setup.sh` calls,
+  # since `bash` is already resolved to the Homebrew path in this shell
+  if should_install_component "bash"; then
+    echo "=== Bash ==="
+
+    # 1. Restore shell to zsh (macOS default)
+    echo "=== Restoring Default Shell to Zsh ==="
+    restore_shell "/bin/zsh"
+    echo ""
+
+    # 2. Remove bash configurations
+    bash "$PROJECT_ROOT/common/bash/setup.sh" uninstall
+
+    # 3. Remove platform-specific bash configuration
+    echo "=== macOS-Specific Bash Uninstall ==="
+    remove_symlink "$HOME/.bashrc.local"
+    echo ""
+
+    # 4. Uninstall Homebrew bash
+    echo "Uninstalling Homebrew bash..."
+    uninstall_brew_package "bash"
     echo ""
   fi
 
