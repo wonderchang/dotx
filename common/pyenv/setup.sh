@@ -22,7 +22,7 @@ install_pyenv_setup() {
       echo "Installing pyenv..."
 
       # Install pyenv using pyenv-installer (official method)
-      curl https://pyenv.run | bash
+      curl -fsSL https://pyenv.run | bash
 
       echo "✓ pyenv installed"
     fi

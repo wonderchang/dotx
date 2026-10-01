@@ -35,7 +35,7 @@ install_bash_setup() {
       local tmp_src="bash-git-prompt-${BASH_GIT_PROMPT_VERSION}"
       local tmp_tarball="${tmp_src}.tar.gz"
 
-      curl -L -o "$tmp_tarball" \
+      curl -fSL --progress-bar -o "$tmp_tarball" \
         "https://github.com/magicmonty/bash-git-prompt/archive/${BASH_GIT_PROMPT_VERSION}.tar.gz"
       tar zxf "$tmp_tarball"
       mkdir -p "$BASH_GIT_PROMPT_DIR"

@@ -23,7 +23,7 @@ install_nvm_setup() {
       echo "Installing nvm ${NVM_VERSION}..."
 
       # Download and install nvm
-      curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
+      curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
 
       echo "✓ nvm installed"
     fi

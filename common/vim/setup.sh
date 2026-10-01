@@ -36,7 +36,7 @@ install_vim_setup() {
       echo "[DRY-RUN] Would install vim-plug from GitHub"
     else
       echo "Installing vim-plug..."
-      curl -fLo "$VIM_PLUG" --create-dirs \
+      curl -fSL --progress-bar -o "$VIM_PLUG" --create-dirs \
         "https://raw.githubusercontent.com/junegunn/vim-plug/${VIM_PLUG_VERSION}/plug.vim"
       echo "✓ vim-plug installed"
     fi
