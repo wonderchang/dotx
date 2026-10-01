@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # platform/macos/iterm2.sh
-# Configure iTerm2 default profile to use a Powerline font (for tmux theme)
+# Configure iTerm2: Powerline font for the default profile (for tmux theme)
+# dotx Dynamic Profiles (e.g. Smyck profile) and color presets (*.itermcolors)
 #
 # Usage:
 #   bash iterm2.sh install
@@ -10,8 +11,18 @@
 #   - iTerm2 keeps profiles in memory and overwrites preferences on save,
 #     so changes are only applied while iTerm2 is NOT running.
 #   - Preferences are exported/imported via `defaults` so cfprefsd stays in sync.
+#   - Dynamic Profiles are symlinked and hot-reloaded, so they are linked
+#     even while iTerm2 is running.
+#   - Color presets are imported with `open` (launches iTerm2 if needed) and
+#     are kept on uninstall (remove via Profiles → Colors → Color Presets).
 
 set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Source utilities
+source "$PROJECT_ROOT/utils/symlink.sh"
 
 ITERM2_DOMAIN="com.googlecode.iterm2"
 ITERM2_APP="/Applications/iTerm.app"
@@ -20,6 +31,8 @@ POWERLINE_FONT_FILE="$HOME/Library/Fonts/Source Code Pro for Powerline.otf"
 DEFAULT_FONT_SIZE="12"
 BACKUP_FILE="$HOME/.config/dotx/iterm2-font.backup"
 PLISTBUDDY="/usr/libexec/PlistBuddy"
+PROFILES_SRC_DIR="$SCRIPT_DIR/iterm2"
+DYNAMIC_PROFILES_DIR="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
 
 # ============================================================================
 # Helper Functions
@@ -31,6 +44,12 @@ iterm2_installed() {
 
 iterm2_running() {
   pgrep -x iTerm2 &>/dev/null
+}
+
+color_preset_imported() {
+  local name="$1"
+  defaults read "$ITERM2_DOMAIN" "Custom Color Presets" 2>/dev/null \
+    | grep -q -E "^    \"?${name}\"? = "
 }
 
 # Print index of the default profile in "New Bookmarks" (empty if not found)
@@ -138,6 +157,29 @@ set_default_profile_font() {
 # Mode: Install
 # ============================================================================
 
+install_dynamic_profiles() {
+  echo "=== iTerm2 Dynamic Profiles ==="
+
+  if ! iterm2_installed; then
+    echo "✓ iTerm2 not installed, skipping"
+    echo ""
+    return 0
+  fi
+
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    [ -d "$DYNAMIC_PROFILES_DIR" ] || echo "[DRY-RUN] Would create $DYNAMIC_PROFILES_DIR"
+  else
+    mkdir -p "$DYNAMIC_PROFILES_DIR"
+  fi
+
+  local profile
+  for profile in "$PROFILES_SRC_DIR"/*.json; do
+    create_symlink "$profile" "$DYNAMIC_PROFILES_DIR/dotx-$(basename "$profile")"
+  done
+  echo "✓ Dynamic profiles linked (iTerm2 → Settings → Profiles)"
+  echo ""
+}
+
 install_iterm2_font() {
   echo "=== iTerm2 Powerline Font ==="
 
@@ -165,9 +207,44 @@ install_iterm2_font() {
   echo ""
 }
 
+import_color_presets() {
+  echo "=== iTerm2 Color Presets ==="
+
+  if ! iterm2_installed; then
+    echo "✓ iTerm2 not installed, skipping"
+    echo ""
+    return 0
+  fi
+
+  local preset name
+  for preset in "$PROFILES_SRC_DIR"/*.itermcolors; do
+    name=$(basename "$preset" .itermcolors)
+    if color_preset_imported "$name"; then
+      echo "  ✓ Color preset already imported: $name"
+    elif [ "${DRY_RUN:-false}" = "true" ]; then
+      echo "  [DRY-RUN] Would import color preset: $name"
+    else
+      open -a iTerm "$preset"
+      echo "  Imported color preset: $name"
+    fi
+  done
+  echo "✓ Color presets available (Profiles → Colors → Color Presets)"
+  echo ""
+}
+
 # ============================================================================
 # Mode: Uninstall
 # ============================================================================
+
+uninstall_dynamic_profiles() {
+  echo "=== iTerm2 Dynamic Profiles Uninstall ==="
+
+  local profile
+  for profile in "$PROFILES_SRC_DIR"/*.json; do
+    remove_symlink "$DYNAMIC_PROFILES_DIR/dotx-$(basename "$profile")"
+  done
+  echo ""
+}
 
 uninstall_iterm2_font() {
   echo "=== iTerm2 Font Restore ==="
@@ -203,8 +280,11 @@ MODE="${1:-install}"
 case "$MODE" in
   install)
     install_iterm2_font
+    install_dynamic_profiles
+    import_color_presets
     ;;
   uninstall)
+    uninstall_dynamic_profiles
     uninstall_iterm2_font
     ;;
   *)

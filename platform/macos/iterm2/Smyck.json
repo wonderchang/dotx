@@ -1,0 +1,125 @@
+{
+  "Profiles": [
+    {
+      "Name": "Smyck",
+      "Guid": "201262D0-7C90-43DA-A737-9DE864DED890",
+      "Dynamic Profile Parent Name": "Default",
+      "Normal Font": "SourceCodeProForPowerline-Regular 12",
+      "Ansi 0 Color": {
+        "Blue Component": 0.0,
+        "Green Component": 0.0,
+        "Red Component": 0.0
+      },
+      "Ansi 1 Color": {
+        "Blue Component": 0.19335,
+        "Green Component": 0.256177,
+        "Red Component": 0.720158
+      },
+      "Ansi 10 Color": {
+        "Blue Component": 0.215686,
+        "Green Component": 0.945098,
+        "Red Component": 0.768627
+      },
+      "Ansi 11 Color": {
+        "Blue Component": 0.301961,
+        "Green Component": 0.882353,
+        "Red Component": 0.996078
+      },
+      "Ansi 12 Color": {
+        "Blue Component": 0.941176,
+        "Green Component": 0.811765,
+        "Red Component": 0.552941
+      },
+      "Ansi 13 Color": {
+        "Blue Component": 1.0,
+        "Green Component": 0.603922,
+        "Red Component": 0.968627
+      },
+      "Ansi 14 Color": {
+        "Blue Component": 0.811765,
+        "Green Component": 0.85098,
+        "Red Component": 0.415686
+      },
+      "Ansi 15 Color": {
+        "Blue Component": 0.968627,
+        "Green Component": 0.968627,
+        "Red Component": 0.968627
+      },
+      "Ansi 2 Color": {
+        "Blue Component": 0.0,
+        "Green Component": 0.663765,
+        "Red Component": 0.491568
+      },
+      "Ansi 3 Color": {
+        "Blue Component": 0.0,
+        "Green Component": 0.647059,
+        "Red Component": 0.768627
+      },
+      "Ansi 4 Color": {
+        "Blue Component": 0.768627,
+        "Green Component": 0.639216,
+        "Red Component": 0.384314
+      },
+      "Ansi 5 Color": {
+        "Blue Component": 0.8,
+        "Green Component": 0.541176,
+        "Red Component": 0.729412
+      },
+      "Ansi 6 Color": {
+        "Blue Component": 0.513726,
+        "Green Component": 0.45098,
+        "Red Component": 0.12549
+      },
+      "Ansi 7 Color": {
+        "Blue Component": 0.629703,
+        "Green Component": 0.629852,
+        "Red Component": 0.629733
+      },
+      "Ansi 8 Color": {
+        "Blue Component": 0.48,
+        "Green Component": 0.48,
+        "Red Component": 0.48
+      },
+      "Ansi 9 Color": {
+        "Blue Component": 0.486275,
+        "Green Component": 0.513725,
+        "Red Component": 0.839216
+      },
+      "Background Color": {
+        "Blue Component": 0.106118,
+        "Green Component": 0.106142,
+        "Red Component": 0.106122
+      },
+      "Bold Color": {
+        "Blue Component": 1.0,
+        "Green Component": 1.0,
+        "Red Component": 1.0
+      },
+      "Cursor Color": {
+        "Blue Component": 0.733333,
+        "Green Component": 0.733333,
+        "Red Component": 0.733333
+      },
+      "Cursor Text Color": {
+        "Blue Component": 1.0,
+        "Green Component": 1.0,
+        "Red Component": 1.0
+      },
+      "Foreground Color": {
+        "Blue Component": 0.968627,
+        "Green Component": 0.968627,
+        "Red Component": 0.968627
+      },
+      "Selected Text Color": {
+        "Blue Component": 0.968627,
+        "Green Component": 0.968627,
+        "Red Component": 0.968627
+      },
+      "Selection Color": {
+        "Blue Component": 0.51502,
+        "Green Component": 0.454399,
+        "Red Component": 0.127001
+      }
+    }
+  ]
+}
