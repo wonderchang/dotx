@@ -91,9 +91,16 @@ main() {
     print_info "Running bootstrap script..."
     echo ""
 
-    # Run bootstrap.sh with any arguments passed to this script
+    # Run bootstrap.sh with any arguments passed to this script.
+    # With `curl ... | bash`, stdin is the pipe, so the Homebrew installer
+    # would run non-interactively and could not ask for the sudo password.
+    # Read from the terminal instead when one is available.
     cd "$DOTFILES_DIR"
-    bash bootstrap.sh "$@"
+    if [ ! -t 0 ] && (exec < /dev/tty) 2>/dev/null; then
+        bash bootstrap.sh "$@" < /dev/tty
+    else
+        bash bootstrap.sh "$@"
+    fi
 
     echo ""
     print_success "Installation complete!"
