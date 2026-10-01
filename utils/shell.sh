@@ -89,6 +89,12 @@ restore_shell() {
     return 1
   fi
 
+  # Check if already using the target shell (chsh would ask for a password)
+  if [ "$(get_current_shell)" = "$target_shell" ]; then
+    echo "  ✓ Default shell is already: $target_shell"
+    return 0
+  fi
+
   if [ "${DRY_RUN:-false}" = "true" ]; then
     echo "  [DRY-RUN] Would restore default shell to: $target_shell"
   else
