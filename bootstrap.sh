@@ -56,10 +56,10 @@ main() {
   # Delegate to platform-specific setup
   case "$PLATFORM" in
     macos)
-      bash "$SCRIPT_DIR/platform/macos/setup.sh" "$MODE" "${COMPONENTS[@]}"
+      bash "$SCRIPT_DIR/platform/macos/setup.sh" "$MODE" ${COMPONENTS[@]+"${COMPONENTS[@]}"}
       ;;
     ubuntu)
-      bash "$SCRIPT_DIR/platform/ubuntu/setup.sh" "$MODE" "${COMPONENTS[@]}"
+      bash "$SCRIPT_DIR/platform/ubuntu/setup.sh" "$MODE" ${COMPONENTS[@]+"${COMPONENTS[@]}"}
       ;;
     *)
       echo "ERROR: Unsupported platform: $PLATFORM"
@@ -137,4 +137,4 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Execute
-main "$MODE" "$DRY_RUN" "${COMPONENTS[@]}"
+main "$MODE" "$DRY_RUN" ${COMPONENTS[@]+"${COMPONENTS[@]}"}
