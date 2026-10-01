@@ -89,6 +89,20 @@ alias less='less -R'
 if [ -f "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
     GIT_PROMPT_THEME=WonderChang
     source "$HOME/.bash-git-prompt/gitprompt.sh"
+
+    # setGitPrompt re-sources the theme files on every prompt. Once
+    # `bootstrap.sh --uninstall` removes ~/.bash-git-prompt, the shell that ran
+    # it would print "No such file or directory" before every prompt. Wrap it so
+    # the running shell falls back to a plain prompt instead.
+    __dotx_git_prompt() {
+        if [ -f "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
+            setGitPrompt
+        else
+            PROMPT_COMMAND=""
+            PS1="${OLD_GITPROMPT:-\u@\h:\w\$ }"
+        fi
+    }
+    PROMPT_COMMAND="${PROMPT_COMMAND//setGitPrompt/__dotx_git_prompt}"
 fi
 
 # ============================================================================
