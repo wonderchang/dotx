@@ -10,6 +10,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # Source utilities
 source "$PROJECT_ROOT/utils/symlink.sh"
 source "$PROJECT_ROOT/utils/shell.sh"
+source "$PROJECT_ROOT/utils/detect.sh"
 
 # Component list to install/uninstall
 COMPONENTS=()
@@ -84,6 +85,8 @@ install_macos() {
 
   # 1. Install Homebrew (prerequisite)
   bash "$SCRIPT_DIR/homebrew.sh"
+  # homebrew.sh runs in a subshell, so load brew's PATH here as well
+  load_brew_shellenv
 
   # 2. Install tools with their packages
   if should_install_component "vim"; then

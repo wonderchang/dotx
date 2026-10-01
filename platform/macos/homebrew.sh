@@ -8,6 +8,10 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Source utilities
+source "$PROJECT_ROOT/utils/detect.sh"
 
 # ============================================================================
 # Helper Functions
@@ -27,7 +31,8 @@ check_macos() {
 install_homebrew() {
   echo "=== Homebrew Installation ==="
 
-  # Check if Homebrew is already installed
+  # Check if Homebrew is already installed (may be installed but not on PATH)
+  load_brew_shellenv
   if command -v brew &> /dev/null; then
     BREW_VERSION=$(brew --version | head -1)
     echo "✓ Homebrew already installed: $BREW_VERSION"
@@ -52,7 +57,8 @@ install_homebrew() {
 
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-  # Verify installation
+  # Verify installation (the installer does not update this shell's PATH)
+  load_brew_shellenv
   if command -v brew &> /dev/null; then
     BREW_VERSION=$(brew --version | head -1)
     echo ""

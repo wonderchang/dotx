@@ -7,6 +7,7 @@
 #   source scripts/utils/detect.sh
 #   PLATFORM=$(detect_platform)
 #   PKG_MGR=$(detect_package_manager "$PLATFORM")
+#   load_brew_shellenv
 
 # ============================================================================
 # Platform Detection
@@ -50,4 +51,22 @@ detect_package_manager() {
       exit 1
       ;;
   esac
+}
+
+# ============================================================================
+# Homebrew Environment
+# ============================================================================
+
+# Put Homebrew on PATH for the current shell. A fresh install is not on PATH
+# yet: /opt/homebrew on Apple Silicon, /usr/local on Intel.
+# Always returns 0; check `command -v brew` afterwards.
+load_brew_shellenv() {
+  local brew_bin
+  for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [ -x "$brew_bin" ]; then
+      eval "$("$brew_bin" shellenv)"
+      return 0
+    fi
+  done
+  return 0
 }
