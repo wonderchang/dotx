@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # platform/macos/iterm2.sh
 # Configure iTerm2: Powerline font for the default profile (for tmux theme)
-# dotx Dynamic Profiles (e.g. Smyck profile) and color presets (*.itermcolors)
+# and dotx Dynamic Profiles (e.g. Smyck profile, set as default)
 #
 # Usage:
 #   bash iterm2.sh install
@@ -13,8 +13,8 @@
 #   - Preferences are exported/imported via `defaults` so cfprefsd stays in sync.
 #   - Dynamic Profiles are symlinked and hot-reloaded, so they are linked
 #     even while iTerm2 is running.
-#   - Color presets are imported with `open` (launches iTerm2 if needed) and
-#     are kept on uninstall (remove via Profiles → Colors → Color Presets).
+#   - The default profile is switched to Smyck via `defaults`, also only while
+#     iTerm2 is NOT running (it reads the default profile only at launch).
 
 set -eu
 
@@ -33,6 +33,8 @@ BACKUP_FILE="$HOME/.config/dotx/iterm2-font.backup"
 PLISTBUDDY="/usr/libexec/PlistBuddy"
 PROFILES_SRC_DIR="$SCRIPT_DIR/iterm2"
 DYNAMIC_PROFILES_DIR="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
+DEFAULT_PROFILE="Smyck"
+DEFAULT_PROFILE_BACKUP_FILE="$HOME/.config/dotx/iterm2-default-profile.backup"
 
 # ============================================================================
 # Helper Functions
@@ -44,12 +46,6 @@ iterm2_installed() {
 
 iterm2_running() {
   pgrep -x iTerm2 &>/dev/null
-}
-
-color_preset_imported() {
-  local name="$1"
-  defaults read "$ITERM2_DOMAIN" "Custom Color Presets" 2>/dev/null \
-    | grep -q -E "^    \"?${name}\"? = "
 }
 
 # Print index of the default profile in "New Bookmarks" (empty if not found)
@@ -81,6 +77,29 @@ default_dynamic_profile() {
       return 0
     fi
   done
+}
+
+# Print the Guid of a dynamic profile JSON file
+profile_guid() {
+  sed -n 's/^ *"Guid": "\([^"]*\)".*/\1/p' "$1" | head -1
+}
+
+current_default_guid() {
+  defaults read "$ITERM2_DOMAIN" "Default Bookmark Guid" 2>/dev/null || true
+}
+
+# Make the profile with this Guid the default (iTerm2 must not be running)
+#   $2 = profile name for messages
+set_default_profile_guid() {
+  local guid="$1"
+  local name="$2"
+
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would set iTerm2 default profile: $name"
+  else
+    defaults write "$ITERM2_DOMAIN" "Default Bookmark Guid" -string "$guid"
+    echo "✓ iTerm2 default profile set: $name"
+  fi
 }
 
 print_manual_instructions() {
@@ -236,8 +255,8 @@ install_iterm2_font() {
   echo ""
 }
 
-import_color_presets() {
-  echo "=== iTerm2 Color Presets ==="
+install_default_profile() {
+  echo "=== iTerm2 Default Profile ==="
 
   if ! iterm2_installed; then
     echo "✓ iTerm2 not installed, skipping"
@@ -245,25 +264,70 @@ import_color_presets() {
     return 0
   fi
 
-  local preset name
-  for preset in "$PROFILES_SRC_DIR"/*.itermcolors; do
-    name=$(basename "$preset" .itermcolors)
-    if color_preset_imported "$name"; then
-      echo "  ✓ Color preset already imported: $name"
-    elif [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "  [DRY-RUN] Would import color preset: $name"
-    else
-      open -a iTerm "$preset"
-      echo "  Imported color preset: $name"
-    fi
-  done
-  echo "✓ Color presets available (Profiles → Colors → Color Presets)"
+  local guid current
+  guid=$(profile_guid "$PROFILES_SRC_DIR/$DEFAULT_PROFILE.json")
+  current=$(current_default_guid)
+
+  if [ "$current" = "$guid" ]; then
+    echo "✓ iTerm2 default profile already set: $DEFAULT_PROFILE"
+    echo ""
+    return 0
+  fi
+
+  if iterm2_running; then
+    echo "⚠ iTerm2 is running; skipping default profile change (iTerm2 reads it only at launch)"
+    echo "  To set it manually: iTerm2 → Settings → Profiles → select '$DEFAULT_PROFILE'"
+    echo "  → Other Actions → Set as Default"
+    echo "  Or quit iTerm2 and re-run from Terminal.app: ./bootstrap.sh tmux"
+    echo ""
+    return 0
+  fi
+
+  set_default_profile_guid "$guid" "$DEFAULT_PROFILE"
+  if [ "${DRY_RUN:-false}" != "true" ] && [ -n "$current" ]; then
+    mkdir -p "$(dirname "$DEFAULT_PROFILE_BACKUP_FILE")"
+    echo "$current" > "$DEFAULT_PROFILE_BACKUP_FILE"
+    echo "  Saved previous default profile to $DEFAULT_PROFILE_BACKUP_FILE"
+  fi
   echo ""
 }
 
 # ============================================================================
 # Mode: Uninstall
 # ============================================================================
+
+# Must run before the dynamic profiles are unlinked, otherwise iTerm2 falls
+# back to another profile on its own
+uninstall_default_profile() {
+  echo "=== iTerm2 Default Profile Restore ==="
+
+  if ! iterm2_installed || [ ! -f "$DEFAULT_PROFILE_BACKUP_FILE" ]; then
+    echo "✓ No iTerm2 default profile backup to restore"
+    echo ""
+    return 0
+  fi
+
+  if iterm2_running; then
+    echo "⚠ iTerm2 is running; skipping default profile restore (iTerm2 reads it only at launch)"
+    echo "  Quit iTerm2 and re-run from Terminal.app: ./bootstrap.sh --uninstall tmux"
+    echo ""
+    return 0
+  fi
+
+  # Only restore if the default is still the dotx profile
+  if [ "$(current_default_guid)" = "$(profile_guid "$PROFILES_SRC_DIR/$DEFAULT_PROFILE.json")" ]; then
+    set_default_profile_guid "$(cat "$DEFAULT_PROFILE_BACKUP_FILE")" "previous default"
+  else
+    echo "✓ Default profile is no longer $DEFAULT_PROFILE, leaving it as is"
+  fi
+
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY-RUN] Would remove $DEFAULT_PROFILE_BACKUP_FILE"
+  else
+    rm -f "$DEFAULT_PROFILE_BACKUP_FILE"
+  fi
+  echo ""
+}
 
 uninstall_dynamic_profiles() {
   echo "=== iTerm2 Dynamic Profiles Uninstall ==="
@@ -308,11 +372,12 @@ MODE="${1:-install}"
 
 case "$MODE" in
   install)
-    install_iterm2_font
     install_dynamic_profiles
-    import_color_presets
+    install_default_profile
+    install_iterm2_font
     ;;
   uninstall)
+    uninstall_default_profile
     uninstall_dynamic_profiles
     uninstall_iterm2_font
     ;;

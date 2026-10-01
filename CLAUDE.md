@@ -104,7 +104,7 @@ fi
 - Uses `install_brew_package()` helper
 - Sets iTerm2 default profile font to Source Code Pro for Powerline (via `iterm2.sh`, part of `tmux`); skipped while iTerm2 is running or if a Powerline/Nerd font is already set, restored on uninstall
 - Links iTerm2 Dynamic Profiles from `platform/macos/iterm2/*.json` (e.g. Smyck color scheme, inherits from Default) into `~/Library/Application Support/iTerm2/DynamicProfiles/`; hot-reloaded, works while iTerm2 is running
-- Imports iTerm2 color presets from `platform/macos/iterm2/*.itermcolors` (Smyck, BlulocoLight) via `open`; skipped if already imported, kept on uninstall
+- Sets the Smyck dynamic profile as iTerm2's default profile via `defaults`; skipped while iTerm2 is running (it reads the default only at launch), previous default restored on uninstall
 
 **Ubuntu specifics:**
 - Runs `apt-get update` first (via `apt.sh`)
