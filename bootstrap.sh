@@ -12,7 +12,7 @@
 #
 # Components:
 #   basic ones (vim, git, tmux, bash, nvm, pyenv, pipx, uv, rust) are installed
-#   by default; optional ones (gcloud, aws) only when named. `all` = basic + optional.
+#   by default; optional ones (gcloud, aws, lima) only when named. `all` = basic + optional.
 #   See utils/components.sh.
 
 set -eu
@@ -113,6 +113,7 @@ while [[ $# -gt 0 ]]; do
       echo "Optional components (only when named explicitly):"
       echo "  gcloud      Google Cloud CLI (gcloud, gsutil, bq)"
       echo "  aws         AWS CLI v2"
+      echo "  lima        Lima: Linux virtual machines"
       echo ""
       echo "Selection keywords:"
       echo "  basic       The basic components (same as giving none)"

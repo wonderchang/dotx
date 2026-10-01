@@ -197,6 +197,16 @@ if command -v aws_completer >/dev/null 2>&1; then
 fi
 
 # ============================================================================
+# Lima
+# ============================================================================
+
+# limactl generates its own completion script (cobra); the Linux tarball ships
+# none, so generate it here for both platforms
+if command -v limactl >/dev/null 2>&1; then
+  source <(limactl completion bash)
+fi
+
+# ============================================================================
 # Claude Code
 # ============================================================================
 

@@ -288,6 +288,14 @@ install_macos() {
     echo ""
   fi
 
+  if should_install_component "lima"; then
+    echo "=== Lima ==="
+    # Linux VMs on macOS (Virtualization.framework by default).
+    # Completion is wired up in common/bash/.bashrc via `limactl completion`.
+    install_brew_package "lima"
+    echo ""
+  fi
+
   echo "========================================"
   echo "  ✓ macOS Setup Complete!"
   echo "========================================"
@@ -365,6 +373,19 @@ uninstall_macos() {
     uninstall_brew_package "awscli"
     if [ -d "$HOME/.aws" ]; then
       echo "  Note: ~/.aws (credentials, config) is kept"
+    fi
+    echo ""
+  fi
+
+  if should_install_component "lima"; then
+    echo "=== Lima ==="
+    if command -v limactl &>/dev/null && [ -n "$(limactl list -q 2>/dev/null)" ]; then
+      echo "  ⚠ Lima instances exist in ~/.lima; they are kept. Stop running ones first:"
+      echo "    limactl list; limactl stop <name>"
+    fi
+    uninstall_brew_package "lima"
+    if [ -d "$HOME/.lima" ]; then
+      echo "  Note: ~/.lima (VM instances, disks) is kept"
     fi
     echo ""
   fi
