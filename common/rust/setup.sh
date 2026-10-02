@@ -19,7 +19,9 @@ cleanup_cargo_env_line() {
   fi
 
   if [ -f "$file_path" ] && grep -q '^\. "\$HOME/\.cargo/env"' "$file_path"; then
-    grep -v '^\. "\$HOME/\.cargo/env"' "$file_path" > "$file_path.tmp"
+    # cp -p first so the rewritten file keeps the original mode
+    cp -p "$file_path" "$file_path.tmp"
+    grep -v '^\. "\$HOME/\.cargo/env"' "$file_path" > "$file_path.tmp" || true
     mv -f "$file_path.tmp" "$file_path"
     echo "✓ Cleaned up auto-added line from $file_name"
   fi

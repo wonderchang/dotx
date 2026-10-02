@@ -19,8 +19,10 @@ cleanup_env_line() {
   fi
 
   if [ -f "$file_path" ] && grep -q '^\. "\$HOME/\.local/bin/env"' "$file_path"; then
-    grep -v '^\. "\$HOME/\.local/bin/env"' "$file_path" > "$file_path.tmp"
-    mv "$file_path.tmp" "$file_path"
+    # cp -p first so the rewritten file keeps the original mode
+    cp -p "$file_path" "$file_path.tmp"
+    grep -v '^\. "\$HOME/\.local/bin/env"' "$file_path" > "$file_path.tmp" || true
+    mv -f "$file_path.tmp" "$file_path"
     echo "✓ Cleaned up auto-added line from $file_name"
   fi
 }

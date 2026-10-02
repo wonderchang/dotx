@@ -136,7 +136,7 @@ fi
 
 `utils/symlink.sh` provides:
 - `create_symlink()` - Creates symlinks with auto-backup
-- `remove_symlink()` - Removes symlinks safely
+- `remove_symlink()` - Removes symlinks and restores the newest `<target>.backup.*` made by `create_symlink()` (verified in a Lima Ubuntu VM: the stock `~/.bashrc` comes back after `--uninstall`)
 - **Idempotent** - Checks if symlink already correct before doing work
 - **Dry-run aware** - Previews changes without applying
 
@@ -205,12 +205,17 @@ fi
 - **Always add dry-run support** to new operations
 - **Never block on a prompt** - run third-party installers non-interactively (`NONINTERACTIVE=1` for the Homebrew installer, `HOMEBREW_NO_ASK=1` for `brew install`, `-y` for rustup/apt, `vim -es` for PlugInstall); the only prompt allowed is the single password request at the start of a run (`request_sudo` in `utils/sudo.sh`, asked only when a later step needs sudo; run anything that needs root through `sudo` so the cached credential is reused; `HOMEBREW_NO_SUDO=1` is exported on macOS because every `brew` command otherwise runs `sudo --reset-timestamp` and wipes that cache)
 - **Use `${DRY_RUN:-false}` pattern** for consistency
+- **Clone over HTTPS regardless of the user's gitconfig** - `bootstrap.sh` exports `GIT_CONFIG_GLOBAL=/dev/null` for the whole run because `.gitconfig` rewrites `https://github.com/` to SSH, which breaks every GitHub clone (fonts, nvm, pyenv, vim-plug) on a machine without a GitHub SSH key
 - **Quiet curl output** - `curl -fsSL url | bash` for installer scripts (no transfer table, HTTP errors fail instead of piping an error page into bash); `curl -fSL --progress-bar -o file url` when downloading an actual file
 - **Test both dry-run and actual execution** paths
 - **Make scripts idempotent** - safe to run multiple times
 - **Use absolute paths** when sourcing utilities
 - **Handle errors gracefully** with meaningful messages
 - **Follow existing patterns** in platform setup scripts
+
+## Verifying the Ubuntu side in a Lima VM
+
+`limactl start --name dotx-ubuntu --tty=false template://ubuntu-lts` gives a throwaway Ubuntu LTS with passwordless sudo and the macOS home mounted read-only at the same path. Inside it: `git clone /Users/<user>/dotx ~/dotx` (committed state) or `rsync -a --delete --exclude .git /Users/<user>/dotx/ ~/dotx/` (working tree), then run `./bootstrap.sh`, `./bootstrap.sh gcloud aws lima`, `./bootstrap.sh --uninstall all` and check the home directory between steps. Run it via `limactl shell dotx-ubuntu -- bash -lc '...'`; interactive-shell checks need a pty (`script -q -c "bash -lic ..." /dev/null`), otherwise bash prints job-control noise that is not a dotx problem.
 
 ## Troubleshooting
 

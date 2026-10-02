@@ -55,16 +55,29 @@ create_symlink() {
   fi
 }
 
+# Most recent backup made by create_symlink for this target, if any
+latest_backup() {
+  local target="$1"
+  ls -t "$target".backup.* 2>/dev/null | head -1
+}
+
 remove_symlink() {
   local target="$1"
+  local backup
 
-  # Remove symlink if it exists
+  # Remove symlink if it exists, then put back the file it replaced
   if [ -L "$target" ]; then
+    backup=$(latest_backup "$target")
     if [ "${DRY_RUN:-false}" = "true" ]; then
       echo "  [DRY-RUN] Would remove symlink: $target"
+      [ -n "$backup" ] && echo "  [DRY-RUN] Would restore original: $target ← $backup"
     else
       rm -f "$target"
       echo "  Removed symlink: $target"
+      if [ -n "$backup" ]; then
+        mv "$backup" "$target"
+        echo "  Restored original: $target ← $backup"
+      fi
     fi
   elif [ -e "$target" ]; then
     echo "  Warning: $target exists but is not a symlink (skipping)"

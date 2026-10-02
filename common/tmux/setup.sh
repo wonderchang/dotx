@@ -7,6 +7,16 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+# powerline/fonts installs into ~/Library/Fonts on macOS and
+# ~/.local/share/fonts on Linux; one font from the set marks the whole install
+# so re-runs skip the 20 MB clone and uninstall skips it when nothing is there.
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  POWERLINE_FONT_DIR="$HOME/Library/Fonts"
+else
+  POWERLINE_FONT_DIR="$HOME/.local/share/fonts"
+fi
+POWERLINE_MARKER_FONT="$POWERLINE_FONT_DIR/Source Code Pro for Powerline.otf"
+
 # Source utilities
 source "$PROJECT_ROOT/utils/symlink.sh"
 
@@ -21,7 +31,9 @@ install_tmux_setup() {
 
   # Install powerline fonts (key dependency for tmux)
   echo ""
-  if [ "${DRY_RUN:-false}" = "true" ]; then
+  if [ -f "$POWERLINE_MARKER_FONT" ]; then
+    echo "✓ Powerline fonts already installed"
+  elif [ "${DRY_RUN:-false}" = "true" ]; then
     echo "[DRY-RUN] Would install powerline fonts from GitHub"
   else
     echo "Installing powerline fonts..."
@@ -44,7 +56,9 @@ uninstall_tmux_setup() {
 
   # Uninstall powerline fonts
   echo ""
-  if [ "${DRY_RUN:-false}" = "true" ]; then
+  if [ ! -f "$POWERLINE_MARKER_FONT" ]; then
+    echo "✓ Powerline fonts not installed"
+  elif [ "${DRY_RUN:-false}" = "true" ]; then
     echo "[DRY-RUN] Would uninstall powerline fonts"
   else
     echo "Uninstalling powerline fonts..."

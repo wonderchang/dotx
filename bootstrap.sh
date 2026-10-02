@@ -23,6 +23,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils/detect.sh"
 source "$SCRIPT_DIR/utils/components.sh"
 
+# dotx and the installers it runs (vim-plug, nvm, pyenv, powerline fonts)
+# clone public repos over HTTPS. The user's ~/.gitconfig (linked by the git
+# component) rewrites https://github.com/ to git@github.com:, which fails on a
+# fresh machine without a GitHub SSH key. Hide the global config from every
+# git run by this script so those clones stay on HTTPS. Needs git >= 2.32.
+export GIT_CONFIG_GLOBAL=/dev/null
+
 # ============================================================================
 # Main
 # ============================================================================
