@@ -11,6 +11,19 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$PROJECT_ROOT/utils/symlink.sh"
 
 VIM_PLUG="$HOME/.vim/autoload/plug.vim"
+
+# Every `Plug 'owner/repo'` (or URL) in .vimrc has a directory of the repo's
+# name under ~/.vim/plugged once installed; PlugInstall is only run when one
+# is missing, so a re-run stays a no-op.
+vim_plugins_present() {
+  local repo name
+  while read -r repo; do
+    name="${repo##*/}"
+    name="${name%.git}"
+    [ -d "$HOME/.vim/plugged/$name" ] || return 1
+  done < <(sed -n "s/^Plug '\([^']*\)'.*/\1/p" "$SCRIPT_DIR/.vimrc")
+  return 0
+}
 VIM_PLUG_VERSION="0.14.0"
 
 install_vim_setup() {
@@ -46,13 +59,21 @@ install_vim_setup() {
 
   # 3. Install plugins
   if [ "${DRY_RUN:-false}" = "true" ]; then
-    echo "[DRY-RUN] Would install vim plugins via PlugInstall"
+    if vim_plugins_present; then
+      echo "✓ Vim plugins already installed"
+    else
+      echo "[DRY-RUN] Would install vim plugins via PlugInstall"
+    fi
   else
-    echo "Installing vim plugins..."
-    # Headless Ex mode (-es): no full-screen UI, no "Press ENTER" prompts.
-    # --sync blocks until every plugin is installed before qa! runs.
-    vim -es -u "$HOME/.vimrc" -i NONE -c 'PlugInstall --sync' -c 'qa!' || true
-    echo "✓ Vim plugins installed"
+    if vim_plugins_present; then
+      echo "✓ Vim plugins already installed"
+    else
+      echo "Installing vim plugins..."
+      # Headless Ex mode (-es): no full-screen UI, no "Press ENTER" prompts.
+      # --sync blocks until every plugin is installed before qa! runs.
+      vim -es -u "$HOME/.vimrc" -i NONE -c 'PlugInstall --sync' -c 'qa!' || true
+      echo "✓ Vim plugins installed"
+    fi
   fi
   echo ""
 }

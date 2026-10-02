@@ -46,15 +46,11 @@ install_bash_setup() {
     fi
   fi
 
-  # 3. Install custom theme if it exists
+  # 3. Link the custom theme (create_symlink is dry-run aware and reports
+  #    "already correct" on re-runs)
   if [ -f "$SCRIPT_DIR/WonderChang.bgptheme" ]; then
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "[DRY-RUN] Would install WonderChang theme"
-    else
-      echo "Installing WonderChang theme..."
-      create_symlink "$SCRIPT_DIR/WonderChang.bgptheme" "$BASH_GIT_PROMPT_DIR/themes/WonderChang.bgptheme"
-      echo "✓ WonderChang theme installed"
-    fi
+    echo "Linking WonderChang theme..."
+    create_symlink "$SCRIPT_DIR/WonderChang.bgptheme" "$BASH_GIT_PROMPT_DIR/themes/WonderChang.bgptheme"
   fi
 
   echo ""

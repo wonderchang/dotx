@@ -62,6 +62,7 @@ dotx/
 ├── platform/
 │   ├── macos/                      # macOS setup + Homebrew + iTerm2 font
 │   └── ubuntu/                     # Ubuntu setup + APT + gcloud/aws/lima installers
+├── tests/                          # End-to-end Ubuntu verification in a Lima VM
 └── utils/                          # Shared utilities
     ├── detect.sh                   # Platform detection
     ├── shell.sh                    # Shell switching
@@ -216,7 +217,7 @@ fi
 
 ## Verifying the Ubuntu side in a Lima VM
 
-`limactl start --name dotx-ubuntu --tty=false template://ubuntu-lts` gives a throwaway Ubuntu LTS with passwordless sudo and the macOS home mounted read-only at the same path. Inside it: `git clone /Users/<user>/dotx ~/dotx` (committed state) or `rsync -a --delete --exclude .git /Users/<user>/dotx/ ~/dotx/` (working tree), then run `./bootstrap.sh`, `./bootstrap.sh gcloud aws lima`, `./bootstrap.sh --uninstall all` and check the home directory between steps. Run it via `limactl shell dotx-ubuntu -- bash -lc '...'`; interactive-shell checks need a pty (`script -q -c "bash -lic ..." /dev/null`), otherwise bash prints job-control noise that is not a dotx problem. To check that uninstall only reverses install, snapshot `dpkg-query -W -f='${Package} ${db:Status-Status}\n' | awk '$2=="installed"{print $1}'` before and after (removed packages linger as `config-files`, so filter by state). On a fresh Ubuntu 26.04 image the expected residue after `--uninstall all` is the `build-essential` closure (a base prerequisite, kept by design) plus packages that APT keeps because base packages recommend them (`python3-venv`, `python3-tk`, `tk8.6` and a few font/X11 libs); nothing from the image may disappear.
+`tests/run-in-lima.sh [--fresh] [--stop]` does the whole cycle (snapshot, install all, `tests/verify-basic.sh`, `tests/verify-optional.sh`, no-op re-install, uninstall all, `tests/verify-clean.sh`) and exits with the number of failed checks; run it before committing anything that touches `platform/ubuntu/` or `common/`. By hand: `limactl start --name dotx-ubuntu --tty=false template:ubuntu-lts` gives a throwaway Ubuntu LTS with passwordless sudo and the macOS home mounted read-only at the same path. Inside it: `git clone /Users/<user>/dotx ~/dotx` (committed state) or `rsync -a --delete --exclude .git /Users/<user>/dotx/ ~/dotx/` (working tree), then run `./bootstrap.sh`, `./bootstrap.sh gcloud aws lima`, `./bootstrap.sh --uninstall all` and check the home directory between steps. Run it via `limactl shell dotx-ubuntu -- bash -lc '...'`; interactive-shell checks need a pty (`script -q -c "bash -lic ..." /dev/null`), otherwise bash prints job-control noise that is not a dotx problem. To check that uninstall only reverses install, snapshot `dpkg-query -W -f='${Package} ${db:Status-Status}\n' | awk '$2=="installed"{print $1}'` before and after (removed packages linger as `config-files`, so filter by state). On a fresh Ubuntu 26.04 image the expected residue after `--uninstall all` is the `build-essential` closure (a base prerequisite, kept by design) plus packages that APT keeps because base packages recommend them (`python3-venv`, `python3-tk`, `tk8.6` and a few font/X11 libs); nothing from the image may disappear.
 
 ## Troubleshooting
 
