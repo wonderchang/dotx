@@ -13,6 +13,7 @@ source "$PROJECT_ROOT/utils/shell.sh"
 source "$PROJECT_ROOT/utils/detect.sh"
 source "$PROJECT_ROOT/utils/sudo.sh"
 source "$PROJECT_ROOT/utils/components.sh"   # should_install_component()
+source "$SCRIPT_DIR/brew-common.sh"              # install_brew_for() / uninstall_brew_for()
 
 # Homebrew 7 asks "Do you want to proceed? [y/n]" before every install by
 # default (ask mode); disable it so the run never blocks on a prompt.
@@ -27,78 +28,12 @@ export HOMEBREW_NO_SUDO=1
 # Component list to install/uninstall
 COMPONENTS=()
 
+# Casks used here (gcloud-cli) only copy files under $(brew --prefix) and run
+# user-level scripts, so they need no sudo and work with HOMEBREW_NO_SUDO.
+
 # ============================================================================
 # Package Management Helpers
 # ============================================================================
-
-install_brew_package() {
-  local package="$1"
-
-  if brew list "$package" &>/dev/null; then
-    echo "✓ $package already installed"
-  else
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "[DRY-RUN] Would install $package via Homebrew"
-    else
-      echo "Installing $package..."
-      brew install "$package"
-      echo "✓ $package installed"
-    fi
-  fi
-}
-
-uninstall_brew_package() {
-  local package="$1"
-
-  if brew list "$package" &>/dev/null; then
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "[DRY-RUN] Would uninstall $package via Homebrew"
-    else
-      echo "Uninstalling $package..."
-      brew uninstall "$package"
-      echo "✓ $package uninstalled"
-    fi
-  else
-    echo "✓ $package not installed"
-  fi
-}
-
-# Casks that only copy files under $(brew --prefix) and run user-level
-# scripts (like gcloud-cli) need no sudo, so they work with HOMEBREW_NO_SUDO.
-install_brew_cask() {
-  local cask="$1"
-
-  if brew list --cask "$cask" &>/dev/null; then
-    echo "✓ $cask already installed"
-  else
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "[DRY-RUN] Would install cask $cask via Homebrew"
-    else
-      echo "Installing $cask..."
-      brew install --cask "$cask"
-      echo "✓ $cask installed"
-    fi
-  fi
-}
-
-# --zap also removes what the cask's zap stanza lists (for gcloud-cli the
-# whole $(brew --prefix)/share/google-cloud-sdk tree); a plain uninstall
-# would leave it behind.
-uninstall_brew_cask() {
-  local cask="$1"
-
-  if brew list --cask "$cask" &>/dev/null; then
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "[DRY-RUN] Would uninstall cask $cask via Homebrew (--zap)"
-    else
-      echo "Uninstalling $cask..."
-      brew uninstall --cask --zap "$cask"
-      echo "✓ $cask uninstalled"
-    fi
-  else
-    echo "✓ $cask not installed"
-  fi
-}
 
 # The gcloud-cli cask runs gcloud on a Python virtualenv under ~/.config/gcloud
 # built from the python@3.x formula the cask depends on. Its postflight only
@@ -212,7 +147,7 @@ install_macos() {
 
   if should_install_component "tmux"; then
     echo "=== Tmux ==="
-    install_brew_package "tmux"
+    install_brew_for tmux tmux
     bash "$PROJECT_ROOT/common/tmux/setup.sh" install
     bash "$SCRIPT_DIR/iterm2.sh" install
   fi
@@ -222,7 +157,7 @@ install_macos() {
 
     # 1. Install modern bash via Homebrew (macOS ships with old bash 3.2)
     echo "Installing bash via Homebrew..."
-    install_brew_package "bash"
+    install_brew_for bash bash
     echo ""
 
     # 2. Switch default shell to Homebrew bash (macOS defaults to zsh)
@@ -256,7 +191,7 @@ install_macos() {
     # Package manager install: `pip install --user` is blocked by PEP 668
     # on Homebrew Python and Ubuntu 23.04+ / Debian 12.
     # ~/.local/bin is already on PATH via .bashrc, so no `pipx ensurepath`.
-    install_brew_package "pipx"
+    install_brew_for pipx pipx
     echo ""
   fi
 
@@ -275,7 +210,7 @@ install_macos() {
     # The cask pulls in python@3.14, creates ~/.config/gcloud/virtenv on it,
     # and links gcloud/gsutil/bq into $(brew --prefix)/bin (already on PATH).
     # Completion is wired up in .bashrc.macos.
-    install_brew_cask "gcloud-cli"
+    install_brew_for gcloud --cask gcloud-cli
     ensure_gcloud_virtenv
     echo ""
   fi
@@ -284,7 +219,7 @@ install_macos() {
     echo "=== AWS CLI ==="
     # Formula awscli is v2; installs aws + aws_completer into Homebrew's bin.
     # Completion is wired up in common/bash/.bashrc via aws_completer.
-    install_brew_package "awscli"
+    install_brew_for aws awscli
     echo ""
   fi
 
@@ -292,7 +227,7 @@ install_macos() {
     echo "=== Lima ==="
     # Linux VMs on macOS (Virtualization.framework by default).
     # Completion is wired up in common/bash/.bashrc via `limactl completion`.
-    install_brew_package "lima"
+    install_brew_for lima lima
     echo ""
   fi
 
@@ -330,7 +265,7 @@ uninstall_macos() {
     echo "=== Tmux ==="
     bash "$SCRIPT_DIR/iterm2.sh" uninstall
     bash "$PROJECT_ROOT/common/tmux/setup.sh" uninstall
-    uninstall_brew_package "tmux"
+    uninstall_brew_for tmux
     echo ""
   fi
 
@@ -347,7 +282,7 @@ uninstall_macos() {
 
   if should_install_component "pipx"; then
     echo "=== pipx ==="
-    uninstall_brew_package "pipx"
+    uninstall_brew_for pipx
     echo ""
   fi
 
@@ -363,14 +298,14 @@ uninstall_macos() {
 
   if should_install_component "gcloud"; then
     echo "=== Google Cloud CLI ==="
-    uninstall_brew_cask "gcloud-cli"
+    uninstall_brew_for gcloud
     remove_gcloud_virtenv
     echo ""
   fi
 
   if should_install_component "aws"; then
     echo "=== AWS CLI ==="
-    uninstall_brew_package "awscli"
+    uninstall_brew_for aws
     if [ -d "$HOME/.aws" ]; then
       echo "  Note: ~/.aws (credentials, config) is kept"
     fi
@@ -383,7 +318,7 @@ uninstall_macos() {
       echo "  ⚠ Lima instances exist in ~/.lima; they are kept. Stop running ones first:"
       echo "    limactl list; limactl stop <name>"
     fi
-    uninstall_brew_package "lima"
+    uninstall_brew_for lima
     if [ -d "$HOME/.lima" ]; then
       echo "  Note: ~/.lima (VM instances, disks) is kept"
     fi
@@ -410,7 +345,7 @@ uninstall_macos() {
 
     # 4. Uninstall Homebrew bash
     echo "Uninstalling Homebrew bash..."
-    uninstall_brew_package "bash"
+    uninstall_brew_for bash
     echo ""
   fi
 
