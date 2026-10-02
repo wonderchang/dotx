@@ -128,6 +128,10 @@ install_ubuntu() {
     echo ""
   fi
 
+  if should_install_component "docker"; then
+    bash "$SCRIPT_DIR/docker.sh" install
+  fi
+
   echo "========================================"
   echo "  ✓ Ubuntu Setup Complete!"
   echo "========================================"
@@ -223,6 +227,10 @@ uninstall_ubuntu() {
   if should_install_component "lima"; then
     bash "$SCRIPT_DIR/lima.sh" uninstall
     echo ""
+  fi
+
+  if should_install_component "docker"; then
+    bash "$SCRIPT_DIR/docker.sh" uninstall
   fi
 
   echo "========================================"

@@ -16,7 +16,7 @@
 # The caller sets COMPONENTS=(...) from the command line; it may be empty.
 
 BASIC_COMPONENTS=(vim git tmux htop bash nvm pyenv pipx uv rust)
-OPTIONAL_COMPONENTS=(gcloud aws lima)
+OPTIONAL_COMPONENTS=(gcloud aws lima docker)
 
 # _in_list needle [item...]
 _in_list() {

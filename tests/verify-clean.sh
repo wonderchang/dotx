@@ -33,7 +33,7 @@ for d in ~/.vim/autoload/plug.vim ~/.vim/plugged ~/.bash-git-prompt ~/.nvm ~/.py
 check "powerline fonts gone" bash -c '! ls ~/.local/share/fonts 2>/dev/null | grep -qi powerline'
 echo "--- packages removed"
 # packages dotx installed itself must be gone; ones that were on the image before dotx must still be there
-for p in vim tmux htop pipx google-cloud-cli; do
+for p in vim tmux htop pipx google-cloud-cli docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-buildx-plugin; do
   if [ -f "$STATE/pkgs-baseline.txt" ] && grep -qx "$p" "$STATE/pkgs-baseline.txt"; then
     check "pkg $p kept (pre-existing)" bash -c "dpkg-query -W -f='\${db:Status-Status}' $p 2>/dev/null | grep -qx installed"
   else
@@ -44,6 +44,10 @@ check "git kept (base prerequisite)" dpkg -s git
 echo "--- gcloud repo files removed"
 check "keyring gone"      gone /usr/share/keyrings/cloud.google.gpg
 check "sources list gone" gone /etc/apt/sources.list.d/google-cloud-sdk.list
+echo "--- docker repo files and group membership removed"
+check "docker keyring gone"      gone /etc/apt/keyrings/docker.asc
+check "docker sources list gone" gone /etc/apt/sources.list.d/docker.list
+check "user no longer in docker group" bash -c '! id -nG "$USER" | tr " " "\n" | grep -qx docker'
 check "dotx state dir gone" bash -c '[ ! -d ~/.local/state/dotx ]'
 echo "RESULT clean: $fail failure(s)"
 exit $fail

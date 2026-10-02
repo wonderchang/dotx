@@ -42,7 +42,7 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ```
 
 **Basic components (default):** `vim`, `git`, `tmux`, `htop`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`
-**Optional components (only when named):** `gcloud`, `aws`, `lima`
+**Optional components (only when named):** `gcloud`, `aws`, `lima`, `docker`
 **Keywords:** `basic` (the default set), `all` (basic + optional)
 
 ## Directory Structure
@@ -114,6 +114,7 @@ fi
 - `gcloud` is the Homebrew cask `gcloud-cli` (`install_brew_for gcloud --cask gcloud-cli`), which pulls in `python@3.14`, builds `~/.config/gcloud/virtenv` on it and links gcloud/gsutil/bq into Homebrew's bin (the cask keeps a pre-existing virtenv untouched, so `ensure_gcloud_virtenv()` rebuilds one that is not on Homebrew Python); uninstall uses `brew uninstall --cask --zap` (a plain uninstall leaves `share/google-cloud-sdk` behind) and removes the virtenv, but keeps the rest of `~/.config/gcloud` (credentials). Not the tarball: on Apple Silicon the tarball has no bundled Python and `install.sh --install-python` installs python.org Python system-wide with sudo
 - `aws` is the Homebrew formula `awscli` (v2, `aws` + `aws_completer` in Homebrew's bin); `~/.aws` is never touched. Completion for both platforms is registered in `common/bash/.bashrc` via `complete -C aws_completer aws`
 - `lima` is the Homebrew formula `lima` (Virtualization.framework by default); `~/.lima` (VM instances) is never touched, uninstall warns if instances exist. Completion for both platforms comes from `source <(limactl completion bash)` in `common/bash/.bashrc`
+- `docker` (`docker.sh`) is colima + the Homebrew `docker` CLI with `docker-compose`, `docker-buildx` and `docker-credential-helper`, not Docker Desktop (its cask needs sudo in the postflight, the first launch must be clicked through, and it is paid for larger companies) and not Lima's own docker template (rootless; colima is rootful like Docker Desktop and sets the docker context itself). A colima `default` profile is created only when none exists (vz, virtiofs, Rosetta, `DOTX_COLIMA_CPU/MEMORY/DISK`, default 4/8/100) and only a profile dotx created is deleted on uninstall; `~/.docker/config.json` gets `cliPluginsExtraDirs` (Homebrew's plugin dir) and `credsStore: osxkeychain`, merged with python3 when the file exists. colima is not started at login (note printed: `brew services start colima`). Installed after lima and uninstalled before it because colima depends on the lima formula; `uninstall_brew_for` keeps a formula that another installed formula still uses
 
 **Ubuntu specifics:**
 - Runs `apt-get update` and installs base prerequisites `curl`, `git` and `build-essential` first (via `apt.sh`, never removed, the counterpart of Xcode CLT on macOS); the `git` component only manages `.gitconfig` and never removes the git package
@@ -122,6 +123,7 @@ fi
 - `aws` uses the official AWS CLI v2 zip installer (`aws.sh`) into `~/.local/aws-cli` with symlinks in `~/.local/bin`, no sudo except `apt-get install unzip`; Ubuntu's APT `awscli` is v1 on 22.04. `~/.aws` is never touched
 - `lima` extracts the latest GitHub release tarball (`lima.sh`, version from the `/releases/latest` redirect, no API call) into `~/.local/lima` and symlinks `bin/*` into `~/.local/bin`; QEMU (`qemu-system-x86` or `qemu-system-arm`, `qemu-utils`) comes from APT and is removed on uninstall if dotx installed it. `~/.lima` (VM instances) is never touched
 - `gcloud` comes from Google's APT repo (`gcloud.sh`): signing key in `/usr/share/keyrings/cloud.google.gpg`, source list in `/etc/apt/sources.list.d/google-cloud-sdk.list`, package `google-cloud-cli`; the APT build disables `gcloud components`, add-ons are `google-cloud-cli-*` packages and are all removed on uninstall together with the key and source list
+- `docker` comes from Docker's APT repo (`docker.sh`, per docs.docker.com/engine/install/ubuntu): key in `/etc/apt/keyrings/docker.asc`, source list `/etc/apt/sources.list.d/docker.list` for the running release's codename (falls back to `noble` with a warning when Docker has no repo for it yet), packages `docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin` via the manifest; the user is added to the `docker` group (needs a new login; removed on uninstall if dotx added it). `/var/lib/docker` and `/var/lib/containerd` are kept with a note
 
 ### Dry-Run Support
 
@@ -151,9 +153,9 @@ fi
 **Platform-specific configs:**
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
 
-**macOS packages (Homebrew):** bash, tmux, htop, pipx, gcloud-cli (cask), awscli, lima
+**macOS packages (Homebrew):** bash, tmux, htop, pipx, gcloud-cli (cask), awscli, lima, colima + docker + docker-compose + docker-buildx + docker-credential-helper
 
-**Ubuntu packages (APT):** curl, git, build-essential (base prerequisites), vim, tmux, htop, pipx, pyenv build libraries, google-cloud-cli (from Google's APT repo), unzip (for the aws installer), qemu-system-x86/arm + qemu-utils (for lima)
+**Ubuntu packages (APT):** curl, git, build-essential (base prerequisites), vim, tmux, htop, pipx, pyenv build libraries, google-cloud-cli (from Google's APT repo), unzip (for the aws installer), qemu-system-x86/arm + qemu-utils (for lima), docker-ce + docker-ce-cli + containerd.io + docker-buildx-plugin + docker-compose-plugin (from Docker's APT repo)
 
 **Ubuntu user-level installs:** aws → `~/.local/aws-cli` with `aws`/`aws_completer` in `~/.local/bin` (official AWS installer, no sudo); lima → `~/.local/lima` (GitHub release tarball) with `bin/*` symlinked into `~/.local/bin`
 

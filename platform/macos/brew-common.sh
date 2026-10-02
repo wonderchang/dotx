@@ -91,6 +91,9 @@ uninstall_brew_for() {
     else
       if ! brew_formula_installed "$package"; then
         echo "✓ $package not installed"
+      elif [ -n "$(brew uses --installed "$package" 2>/dev/null)" ]; then
+        # e.g. lima while colima (docker component) is still installed
+        echo "⚠ $package is still required by: $(brew uses --installed "$package" | tr '\n' ' ')kept"
       elif [ "${DRY_RUN:-false}" = "true" ]; then
         echo "[DRY-RUN] Would uninstall $package via Homebrew"
       else

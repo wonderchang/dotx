@@ -207,6 +207,16 @@ if command -v limactl >/dev/null 2>&1; then
 fi
 
 # ============================================================================
+# Docker
+# ============================================================================
+
+# docker (>= 23) generates its own completion; covers the Homebrew CLI on
+# macOS and docker-ce-cli on Ubuntu
+if command -v docker >/dev/null 2>&1; then
+  source <(docker completion bash)
+fi
+
+# ============================================================================
 # Claude Code
 # ============================================================================
 

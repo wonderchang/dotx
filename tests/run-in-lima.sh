@@ -68,6 +68,11 @@ fi
 vm 'lsb_release -ds; uname -m'
 
 step "Snapshot the pre-dotx state"
+if vm "test -d ~/.local/state/dotx || test -d ~/dotx" 2>/dev/null; then
+  echo "⚠ The VM already has dotx state from an earlier run (~/dotx or ~/.local/state/dotx)."
+  echo "  The clean check compares against a baseline that includes those installs, so"
+  echo "  'no pre-existing package removed' is not meaningful here. Use --fresh for a strict run."
+fi
 vm "mkdir -p $STATE && dpkg-query -W -f='\${Package} \${db:Status-Status}\n' | awk '\$2 == \"installed\" {print \$1}' | LC_ALL=C sort > $STATE/pkgs-baseline.txt && cp ~/.bashrc $STATE/bashrc.orig 2>/dev/null || true; echo \"\$(wc -l < $STATE/pkgs-baseline.txt) packages installed\""
 
 step "Sync working tree into the VM"

@@ -46,3 +46,15 @@ fi
 if [ -n "${HOMEBREW_PREFIX:-}" ] && [ -f "$HOMEBREW_PREFIX/etc/bash_completion.d/google-cloud-sdk" ]; then
   source "$HOMEBREW_PREFIX/etc/bash_completion.d/google-cloud-sdk"
 fi
+
+# ============================================================================
+# colima (Docker VM)
+# ============================================================================
+
+# colima sets the `docker context` itself; tools that ignore contexts and
+# only read DOCKER_HOST can be pointed at the socket with
+#   export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+# (not exported here: docker warns when both a context and DOCKER_HOST are set)
+if command -v colima >/dev/null 2>&1; then
+  source <(colima completion bash)
+fi

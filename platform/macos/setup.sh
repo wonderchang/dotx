@@ -237,6 +237,12 @@ install_macos() {
     echo ""
   fi
 
+  if should_install_component "docker"; then
+    # colima (rootful dockerd in a Lima VM) + docker CLI with compose/buildx;
+    # after lima because colima depends on the lima formula
+    bash "$SCRIPT_DIR/docker.sh" install
+  fi
+
   echo "========================================"
   echo "  ✓ macOS Setup Complete!"
   echo "========================================"
@@ -322,6 +328,11 @@ uninstall_macos() {
       echo "  Note: ~/.aws (credentials, config) is kept"
     fi
     echo ""
+  fi
+
+  # Before lima: colima depends on the lima formula
+  if should_install_component "docker"; then
+    bash "$SCRIPT_DIR/docker.sh" uninstall
   fi
 
   if should_install_component "lima"; then
