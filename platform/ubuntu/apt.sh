@@ -4,6 +4,9 @@
 
 set -eu
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/apt-common.sh"
+
 update_apt() {
   echo "=== Updating APT ==="
 
@@ -17,24 +20,19 @@ update_apt() {
 }
 
 # Base tools that several components need, like Homebrew on macOS:
-#   curl - bash (bash-git-prompt), vim (vim-plug), nvm, pyenv, uv, rust
-#   git  - tmux (powerline fonts), vim (plugins), pyenv, nvm
-PREREQUISITES=(curl git)
+#   curl            - bash (bash-git-prompt), vim (vim-plug), nvm, pyenv, uv, rust
+#   git             - tmux (powerline fonts), vim (plugins), pyenv, nvm
+#   build-essential - rust (cc is the default linker; rustup warns without it),
+#                     pyenv (compiles Pythons), uv/pipx packages with C extensions
+# Like the Xcode Command Line Tools on macOS these are never removed.
+PREREQUISITES=(curl git build-essential)
 
 install_prerequisites() {
   echo "=== Base Prerequisites ==="
 
   local package
   for package in "${PREREQUISITES[@]}"; do
-    if dpkg -l | grep -q "^ii  $package "; then
-      echo "✓ $package already installed"
-    elif [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "[DRY-RUN] Would install $package via APT"
-    else
-      echo "Installing $package..."
-      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$package"
-      echo "✓ $package installed"
-    fi
+    install_apt_package "$package"
   done
   echo ""
 }

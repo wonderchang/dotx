@@ -18,15 +18,14 @@
 
 set -eu
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/apt-common.sh"
+
 PACKAGE="google-cloud-cli"
 KEY_URL="https://packages.cloud.google.com/apt/doc/apt-key.gpg"
 KEYRING="/usr/share/keyrings/cloud.google.gpg"
 SOURCES_LIST="/etc/apt/sources.list.d/google-cloud-sdk.list"
 SOURCES_LINE="deb [signed-by=$KEYRING] https://packages.cloud.google.com/apt cloud-sdk main"
-
-apt_installed() {
-  dpkg -l | grep -q "^ii  $1 "
-}
 
 install_gcloud() {
   echo "=== Google Cloud CLI ==="
@@ -45,7 +44,7 @@ install_gcloud() {
   fi
 
   # gnupg provides gpg for --dearmor; the other two are usually present already
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y apt-transport-https ca-certificates gnupg
+  install_apt_packages_for gcloud apt-transport-https ca-certificates gnupg
 
   if [ -f "$KEYRING" ]; then
     echo "✓ APT signing key already present: $KEYRING"
@@ -67,7 +66,7 @@ install_gcloud() {
   sudo DEBIAN_FRONTEND=noninteractive apt-get update
 
   echo "Installing $PACKAGE..."
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$PACKAGE"
+  apt_install "$PACKAGE"
   echo "✓ $PACKAGE installed (completion is wired up in .bashrc.ubuntu)"
 }
 
@@ -76,7 +75,8 @@ uninstall_gcloud() {
 
   # Main package plus any add-on component packages from the same repo
   local packages
-  packages=$(dpkg -l | awk '/^ii  google-cloud-cli/ {print $2}')
+  packages=$(dpkg-query -W -f='${Package} ${db:Status-Status}\n' 'google-cloud-cli*' 2>/dev/null \
+    | awk '$2 == "installed" {print $1}')
 
   if [ -n "$packages" ]; then
     if [ "${DRY_RUN:-false}" = "true" ]; then
@@ -84,7 +84,8 @@ uninstall_gcloud() {
     else
       echo "Uninstalling" $packages "..."
       # shellcheck disable=SC2086  # word splitting of the package list is intended
-      sudo apt-get remove -y $packages
+      apt_remove $packages
+      apt_autoremove
       echo "✓ $PACKAGE uninstalled"
     fi
   else
@@ -109,6 +110,8 @@ uninstall_gcloud() {
     echo "Updating APT..."
     sudo DEBIAN_FRONTEND=noninteractive apt-get update
   fi
+
+  uninstall_apt_packages_for gcloud
 
   if [ -d "$HOME/.config/gcloud" ]; then
     echo "  Note: ~/.config/gcloud (credentials, configurations) is kept"

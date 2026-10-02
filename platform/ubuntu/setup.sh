@@ -11,45 +11,23 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$PROJECT_ROOT/utils/symlink.sh"
 source "$PROJECT_ROOT/utils/sudo.sh"
 source "$PROJECT_ROOT/utils/components.sh"   # should_install_component()
+source "$SCRIPT_DIR/apt-common.sh"               # install_apt_package() and friends
 
 # Component list to install/uninstall
 COMPONENTS=()
+
+# Libraries pyenv needs to build a Python, from
+# https://github.com/pyenv/pyenv/wiki#suggested-build-environment (Ubuntu);
+# build-essential, curl and git are base prerequisites (apt.sh). The wiki's
+# libncursesw5-dev is only a transitional name for libncurses-dev on current
+# Ubuntu (APT substitutes it, and the substituted name is what dpkg knows).
+PYENV_BUILD_DEPS=(libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev
+  libncurses-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev)
 
 # ============================================================================
 # Package Management Helpers
 # ============================================================================
 
-install_apt_package() {
-  local package="$1"
-
-  if dpkg -l | grep -q "^ii  $package "; then
-    echo "✓ $package already installed"
-  else
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "[DRY-RUN] Would install $package via APT"
-    else
-      echo "Installing $package..."
-      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$package"
-      echo "✓ $package installed"
-    fi
-  fi
-}
-
-uninstall_apt_package() {
-  local package="$1"
-
-  if dpkg -l | grep -q "^ii  $package "; then
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "[DRY-RUN] Would uninstall $package via APT"
-    else
-      echo "Uninstalling $package..."
-      sudo apt-get remove -y "$package"
-      echo "✓ $package uninstalled"
-    fi
-  else
-    echo "✓ $package not installed"
-  fi
-}
 
 install_ubuntu() {
   echo "========================================"
@@ -66,7 +44,7 @@ install_ubuntu() {
   # 2. Install tools with their packages
   if should_install_component "vim"; then
     echo "=== Vim ==="
-    install_apt_package "vim"
+    install_apt_packages_for vim vim
     bash "$PROJECT_ROOT/common/vim/setup.sh" install
     echo ""
   fi
@@ -80,7 +58,7 @@ install_ubuntu() {
 
   if should_install_component "tmux"; then
     echo "=== Tmux ==="
-    install_apt_package "tmux"
+    install_apt_packages_for tmux tmux
     bash "$PROJECT_ROOT/common/tmux/setup.sh" install
     echo ""
   fi
@@ -103,6 +81,9 @@ install_ubuntu() {
   fi
 
   if should_install_component "pyenv"; then
+    echo "=== pyenv Build Dependencies ==="
+    install_apt_packages_for pyenv "${PYENV_BUILD_DEPS[@]}"
+    echo ""
     bash "$PROJECT_ROOT/common/pyenv/setup.sh" install
     echo ""
   fi
@@ -112,7 +93,7 @@ install_ubuntu() {
     # Package manager install: `pip install --user` is blocked by PEP 668
     # on Homebrew Python and Ubuntu 23.04+ / Debian 12.
     # ~/.local/bin is already on PATH via .bashrc, so no `pipx ensurepath`.
-    install_apt_package "pipx"
+    install_apt_packages_for pipx pipx
     echo ""
   fi
 
@@ -160,7 +141,7 @@ uninstall_ubuntu() {
   if should_install_component "vim"; then
     echo "=== Vim ==="
     bash "$PROJECT_ROOT/common/vim/setup.sh" uninstall
-    uninstall_apt_package "vim"
+    uninstall_apt_packages_for vim
     echo ""
   fi
 
@@ -174,7 +155,7 @@ uninstall_ubuntu() {
   if should_install_component "tmux"; then
     echo "=== Tmux ==="
     bash "$PROJECT_ROOT/common/tmux/setup.sh" uninstall
-    uninstall_apt_package "tmux"
+    uninstall_apt_packages_for tmux
     echo ""
   fi
 
@@ -196,12 +177,14 @@ uninstall_ubuntu() {
 
   if should_install_component "pyenv"; then
     bash "$PROJECT_ROOT/common/pyenv/setup.sh" uninstall
+    echo "=== pyenv Build Dependencies Uninstall ==="
+    uninstall_apt_packages_for pyenv
     echo ""
   fi
 
   if should_install_component "pipx"; then
     echo "=== pipx ==="
-    uninstall_apt_package "pipx"
+    uninstall_apt_packages_for pipx
     echo ""
   fi
 

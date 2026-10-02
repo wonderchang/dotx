@@ -11,11 +11,15 @@
 #     so this follows https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 #     but installs under ~/.local/aws-cli with the `aws`/`aws_completer`
 #     symlinks in ~/.local/bin (already on PATH via .bashrc, shared with
-#     pipx and uv). Only `unzip` needs APT (sudo cached by setup.sh).
+#     pipx and uv). Only `unzip` needs APT (sudo cached by setup.sh); it is
+#     removed again on uninstall if this script installed it.
 #   - ~/.aws (credentials, config) is never touched.
 #   - Completion is wired up in common/bash/.bashrc via aws_completer.
 
 set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/apt-common.sh"
 
 INSTALL_DIR="$HOME/.local/aws-cli"
 BIN_DIR="$HOME/.local/bin"
@@ -44,16 +48,13 @@ install_aws() {
   fi
 
   if [ "${DRY_RUN:-false}" = "true" ]; then
-    dpkg -l | grep -q "^ii  unzip " || echo "[DRY-RUN] Would install unzip via APT"
+    install_apt_packages_for aws unzip
     echo "[DRY-RUN] Would download $url"
     echo "[DRY-RUN] Would install AWS CLI to $INSTALL_DIR with symlinks in $BIN_DIR"
     return 0
   fi
 
-  if ! dpkg -l | grep -q "^ii  unzip "; then
-    echo "Installing unzip..."
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y unzip
-  fi
+  install_apt_packages_for aws unzip
 
   local tmp
   tmp=$(mktemp -d)
@@ -86,6 +87,8 @@ uninstall_aws() {
       fi
     fi
   done
+
+  uninstall_apt_packages_for aws
 
   if [ -d "$HOME/.aws" ]; then
     echo "  Note: ~/.aws (credentials, config) is kept"

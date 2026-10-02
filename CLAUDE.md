@@ -115,10 +115,11 @@ fi
 - `lima` is the Homebrew formula `lima` (Virtualization.framework by default); `~/.lima` (VM instances) is never touched, uninstall warns if instances exist. Completion for both platforms comes from `source <(limactl completion bash)` in `common/bash/.bashrc`
 
 **Ubuntu specifics:**
-- Runs `apt-get update` and installs base prerequisites `curl` and `git` first (via `apt.sh`); the `git` component only manages `.gitconfig` and never removes the git package
-- Uses `install_apt_package()` helper
+- Runs `apt-get update` and installs base prerequisites `curl`, `git` and `build-essential` first (via `apt.sh`, never removed, the counterpart of Xcode CLT on macOS); the `git` component only manages `.gitconfig` and never removes the git package
+- `pyenv` installs the build libraries from pyenv's suggested Ubuntu environment (`PYENV_BUILD_DEPS` in `setup.sh`: libssl-dev, zlib1g-dev, libbz2-dev, libreadline-dev, libsqlite3-dev, libncurses-dev, xz-utils, tk-dev, libxml2-dev, libxmlsec1-dev, libffi-dev, liblzma-dev) before pyenv itself and removes on uninstall the ones it installed
+- APT helpers live in `platform/ubuntu/apt-common.sh`. Components install their packages with `install_apt_packages_for <component> ...` (the component's own package for vim/tmux/pipx, dependencies for pyenv/aws/lima/gcloud), which records what was newly installed in `~/.local/state/dotx/apt/<component>`; `uninstall_apt_packages_for <component>` removes exactly that and then runs `apt-get autoremove`, so a package that was already on the machine is never removed (the image's own `vim`/`tmux` once went together with the `ubuntu-server` metapackage, and a pre-installed `xz-utils` dragged `build-essential` along). Plain `install_apt_package()` is only for the base prerequisites in `apt.sh`. Installed-state checks use `dpkg-query`, because `dpkg -l` lists multiarch packages as `name:arch`
 - `aws` uses the official AWS CLI v2 zip installer (`aws.sh`) into `~/.local/aws-cli` with symlinks in `~/.local/bin`, no sudo except `apt-get install unzip`; Ubuntu's APT `awscli` is v1 on 22.04. `~/.aws` is never touched
-- `lima` extracts the latest GitHub release tarball (`lima.sh`, version from the `/releases/latest` redirect, no API call) into `~/.local/lima` and symlinks `bin/*` into `~/.local/bin`; QEMU (`qemu-system-x86` or `qemu-system-arm`, `qemu-utils`) comes from APT and is left installed on uninstall with a note. `~/.lima` (VM instances) is never touched
+- `lima` extracts the latest GitHub release tarball (`lima.sh`, version from the `/releases/latest` redirect, no API call) into `~/.local/lima` and symlinks `bin/*` into `~/.local/bin`; QEMU (`qemu-system-x86` or `qemu-system-arm`, `qemu-utils`) comes from APT and is removed on uninstall if dotx installed it. `~/.lima` (VM instances) is never touched
 - `gcloud` comes from Google's APT repo (`gcloud.sh`): signing key in `/usr/share/keyrings/cloud.google.gpg`, source list in `/etc/apt/sources.list.d/google-cloud-sdk.list`, package `google-cloud-cli`; the APT build disables `gcloud components`, add-ons are `google-cloud-cli-*` packages and are all removed on uninstall together with the key and source list
 
 ### Dry-Run Support
@@ -151,7 +152,7 @@ fi
 
 **macOS packages (Homebrew):** bash, tmux, pipx, gcloud-cli (cask), awscli, lima
 
-**Ubuntu packages (APT):** vim, git, tmux, pipx, google-cloud-cli (from Google's APT repo), unzip (for the aws installer), qemu-system-x86/arm + qemu-utils (for lima)
+**Ubuntu packages (APT):** curl, git, build-essential (base prerequisites), vim, tmux, pipx, pyenv build libraries, google-cloud-cli (from Google's APT repo), unzip (for the aws installer), qemu-system-x86/arm + qemu-utils (for lima)
 
 **Ubuntu user-level installs:** aws → `~/.local/aws-cli` with `aws`/`aws_completer` in `~/.local/bin` (official AWS installer, no sudo); lima → `~/.local/lima` (GitHub release tarball) with `bin/*` symlinked into `~/.local/bin`
 
@@ -215,7 +216,7 @@ fi
 
 ## Verifying the Ubuntu side in a Lima VM
 
-`limactl start --name dotx-ubuntu --tty=false template://ubuntu-lts` gives a throwaway Ubuntu LTS with passwordless sudo and the macOS home mounted read-only at the same path. Inside it: `git clone /Users/<user>/dotx ~/dotx` (committed state) or `rsync -a --delete --exclude .git /Users/<user>/dotx/ ~/dotx/` (working tree), then run `./bootstrap.sh`, `./bootstrap.sh gcloud aws lima`, `./bootstrap.sh --uninstall all` and check the home directory between steps. Run it via `limactl shell dotx-ubuntu -- bash -lc '...'`; interactive-shell checks need a pty (`script -q -c "bash -lic ..." /dev/null`), otherwise bash prints job-control noise that is not a dotx problem.
+`limactl start --name dotx-ubuntu --tty=false template://ubuntu-lts` gives a throwaway Ubuntu LTS with passwordless sudo and the macOS home mounted read-only at the same path. Inside it: `git clone /Users/<user>/dotx ~/dotx` (committed state) or `rsync -a --delete --exclude .git /Users/<user>/dotx/ ~/dotx/` (working tree), then run `./bootstrap.sh`, `./bootstrap.sh gcloud aws lima`, `./bootstrap.sh --uninstall all` and check the home directory between steps. Run it via `limactl shell dotx-ubuntu -- bash -lc '...'`; interactive-shell checks need a pty (`script -q -c "bash -lic ..." /dev/null`), otherwise bash prints job-control noise that is not a dotx problem. To check that uninstall only reverses install, snapshot `dpkg-query -W -f='${Package} ${db:Status-Status}\n' | awk '$2=="installed"{print $1}'` before and after (removed packages linger as `config-files`, so filter by state). On a fresh Ubuntu 26.04 image the expected residue after `--uninstall all` is the `build-essential` closure (a base prerequisite, kept by design) plus packages that APT keeps because base packages recommend them (`python3-venv`, `python3-tk`, `tk8.6` and a few font/X11 libs); nothing from the image may disappear.
 
 ## Troubleshooting
 

@@ -14,12 +14,15 @@
 #     Lima locates share/lima relative to the real binary, so symlinks work.
 #   - On Linux hosts Lima runs on QEMU: qemu-system-x86 (x86_64) or
 #     qemu-system-arm (aarch64) plus qemu-utils, installed via APT (sudo is
-#     cached by setup.sh). They are left installed on uninstall since other
-#     tools may use them; the uninstall prints how to remove them.
+#     cached by setup.sh); uninstall removes the ones this script installed
+#     and leaves pre-existing ones alone.
 #   - ~/.lima (VM instances and disks) is never touched.
 #   - Completion is wired up in common/bash/.bashrc via `limactl completion`.
 
 set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/apt-common.sh"
 
 PREFIX="$HOME/.local/lima"
 BIN_DIR="$HOME/.local/bin"
@@ -60,15 +63,16 @@ install_lima() {
   fi
 
   if [ "${DRY_RUN:-false}" = "true" ]; then
-    echo "[DRY-RUN] Would install via APT: $packages"
+    # shellcheck disable=SC2086
+    install_apt_packages_for lima $packages
     echo "[DRY-RUN] Would download the latest lima-<version>-Linux-$arch.tar.gz from GitHub"
     echo "[DRY-RUN] Would extract it to $PREFIX and symlink bin/* into $BIN_DIR"
     return 0
   fi
 
-  echo "Installing QEMU ($packages)..."
+  echo "Installing QEMU..."
   # shellcheck disable=SC2086  # word splitting of the package list is intended
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y $packages
+  install_apt_packages_for lima $packages
 
   local tag version url
   tag=$(latest_tag)
@@ -120,10 +124,11 @@ uninstall_lima() {
     fi
   fi
 
+  uninstall_apt_packages_for lima
+
   if [ -d "$HOME/.lima" ]; then
     echo "  Note: ~/.lima (VM instances, disks) is kept"
   fi
-  echo "  Note: QEMU packages are kept; remove with: sudo apt-get remove $(qemu_packages)"
 }
 
 # Execute based on mode
