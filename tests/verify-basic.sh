@@ -25,6 +25,7 @@ echo "--- packages"
 check "vim"  dpkg -s vim
 check "git"  dpkg -s git
 check "tmux" dpkg -s tmux
+check "htop" dpkg -s htop
 check "pipx" dpkg -s pipx
 
 echo "--- tools"

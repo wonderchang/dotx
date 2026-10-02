@@ -41,7 +41,7 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ./bootstrap.sh --help
 ```
 
-**Basic components (default):** `vim`, `git`, `tmux`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`
+**Basic components (default):** `vim`, `git`, `tmux`, `htop`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`
 **Optional components (only when named):** `gcloud`, `aws`, `lima`
 **Keywords:** `basic` (the default set), `all` (basic + optional)
 
@@ -151,9 +151,9 @@ fi
 **Platform-specific configs:**
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
 
-**macOS packages (Homebrew):** bash, tmux, pipx, gcloud-cli (cask), awscli, lima
+**macOS packages (Homebrew):** bash, tmux, htop, pipx, gcloud-cli (cask), awscli, lima
 
-**Ubuntu packages (APT):** curl, git, build-essential (base prerequisites), vim, tmux, pipx, pyenv build libraries, google-cloud-cli (from Google's APT repo), unzip (for the aws installer), qemu-system-x86/arm + qemu-utils (for lima)
+**Ubuntu packages (APT):** curl, git, build-essential (base prerequisites), vim, tmux, htop, pipx, pyenv build libraries, google-cloud-cli (from Google's APT repo), unzip (for the aws installer), qemu-system-x86/arm + qemu-utils (for lima)
 
 **Ubuntu user-level installs:** aws → `~/.local/aws-cli` with `aws`/`aws_completer` in `~/.local/bin` (official AWS installer, no sudo); lima → `~/.local/lima` (GitHub release tarball) with `bin/*` symlinked into `~/.local/bin`
 

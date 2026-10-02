@@ -11,7 +11,7 @@
 #   --dry-run   Preview changes without applying them
 #
 # Components:
-#   basic ones (vim, git, tmux, bash, nvm, pyenv, pipx, uv, rust) are installed
+#   basic ones (vim, git, tmux, htop, bash, nvm, pyenv, pipx, uv, rust) are installed
 #   by default; optional ones (gcloud, aws, lima) only when named. `all` = basic + optional.
 #   See utils/components.sh.
 
@@ -110,6 +110,7 @@ while [[ $# -gt 0 ]]; do
       echo "  vim         Vim editor with vim-plug"
       echo "  git         Git configuration"
       echo "  tmux        Tmux terminal multiplexer"
+      echo "  htop        Interactive process viewer"
       echo "  bash        Bash configuration with bash-git-prompt"
       echo "  nvm         Node Version Manager"
       echo "  pyenv       Python version manager"

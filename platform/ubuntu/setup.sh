@@ -63,6 +63,12 @@ install_ubuntu() {
     echo ""
   fi
 
+  if should_install_component "htop"; then
+    echo "=== htop ==="
+    install_apt_packages_for htop htop
+    echo ""
+  fi
+
   if should_install_component "bash"; then
     echo "=== Bash ==="
     bash "$PROJECT_ROOT/common/bash/setup.sh" install
@@ -156,6 +162,12 @@ uninstall_ubuntu() {
     echo "=== Tmux ==="
     bash "$PROJECT_ROOT/common/tmux/setup.sh" uninstall
     uninstall_apt_packages_for tmux
+    echo ""
+  fi
+
+  if should_install_component "htop"; then
+    echo "=== htop ==="
+    uninstall_apt_packages_for htop
     echo ""
   fi
 

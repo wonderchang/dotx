@@ -152,6 +152,12 @@ install_macos() {
     bash "$SCRIPT_DIR/iterm2.sh" install
   fi
 
+  if should_install_component "htop"; then
+    echo "=== htop ==="
+    install_brew_for htop htop
+    echo ""
+  fi
+
   if should_install_component "bash"; then
     echo "=== Bash ==="
 
@@ -266,6 +272,12 @@ uninstall_macos() {
     bash "$SCRIPT_DIR/iterm2.sh" uninstall
     bash "$PROJECT_ROOT/common/tmux/setup.sh" uninstall
     uninstall_brew_for tmux
+    echo ""
+  fi
+
+  if should_install_component "htop"; then
+    echo "=== htop ==="
+    uninstall_brew_for htop
     echo ""
   fi
 

@@ -50,6 +50,7 @@ cd ~/dotx
 - **vim** - Vim editor with vim-plug and plugins
 - **git** - Git version control with custom configuration
 - **tmux** - Terminal multiplexer with powerline theme
+- **htop** - Interactive process viewer
 - **bash** - Modern bash with bash-git-prompt (custom theme)
 - **nvm** - Node Version Manager
 - **pyenv** - Python version manager
@@ -116,6 +117,7 @@ Basic components are installed by a plain `./bootstrap.sh`; optional ones only w
 | `vim` | basic | Vim editor with plugins |
 | `git` | basic | Git configuration |
 | `tmux` | basic | Tmux with powerline theme |
+| `htop` | basic | Interactive process viewer |
 | `bash` | basic | Bash with git prompt |
 | `nvm` | basic | Node Version Manager |
 | `pyenv` | basic | Python version manager |
