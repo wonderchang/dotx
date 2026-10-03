@@ -83,7 +83,7 @@ instructions. Everything installs into your home directory and is wired into
 | `pipx` | Python app installer (Homebrew / APT) |
 | `uv` | Python package and project manager in `~/.local/bin` |
 | `rust` | rustup toolchain in `~/.cargo`, `build-essential` on Ubuntu |
-| `claude` | personal Claude Code instructions: `~/.claude/CLAUDE.md` (language, safety) and `~/.claude/rules/` (thinking, output), loaded in every project. Config only; `~/.claude` state and the `claude` binary are not touched |
+| `claude` | personal Claude Code instructions: `~/.claude/CLAUDE.md` (language, safety) and `~/.claude/rules/` (thinking, output), loaded in every project, plus a `PreToolUse` hook that turns destructive commands (force push, `git reset --hard`, `rm -rf`, `DROP TABLE`, `terraform destroy` …) into a permission prompt even in auto mode. The hook is registered in `settings.json` by merging one entry; the rest of `~/.claude` and the `claude` binary are not touched |
 
 ### Optional: only when named
 

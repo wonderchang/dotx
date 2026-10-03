@@ -23,6 +23,9 @@ check ".gitconfig.local" link_to ~/.gitconfig.local "$DOTX_DIR"/platform/ubuntu/
 check "bgp theme"     link_to ~/.bash-git-prompt/themes/WonderChang.bgptheme "$DOTX_DIR"/common/bash/WonderChang.bgptheme
 check "claude CLAUDE.md" link_to ~/.claude/CLAUDE.md "$DOTX_DIR"/common/claude/CLAUDE.md
 check "claude rules/"    link_to ~/.claude/rules     "$DOTX_DIR"/common/claude/rules
+check "claude hook"      link_to ~/.claude/hooks/guard-destructive.sh "$DOTX_DIR"/common/claude/hooks/guard-destructive.sh
+check "claude hook registered" bash -c 'python3 -c "import json,sys,os; s=json.load(open(os.path.expanduser(\"~/.claude/settings.json\"))); sys.exit(0 if any(h[\"command\"].endswith(\"/hooks/guard-destructive.sh\") for e in s[\"hooks\"][\"PreToolUse\"] for h in e[\"hooks\"]) else 1)"'
+check "claude hook asks on rm -rf" bash -c 'echo "{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"rm -rf x\"}}" | ~/.claude/hooks/guard-destructive.sh | grep -q "\"ask\""'
 check "no .tmux.conf.plain (full profile)" bash -c '[ ! -e ~/.tmux.conf.plain ] && [ ! -L ~/.tmux.conf.plain ]'
 check "profile file says full" bash -c '[ "$(cat ~/.local/state/dotx/profile)" = full ]'
 
