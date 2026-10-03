@@ -120,7 +120,7 @@ Basic components are installed by a plain `./bootstrap.sh`; optional ones only w
 | Component | Tier | Description |
 |-----------|------|-------------|
 | `vim` | minimal | Vim editor with plugins |
-| `git` | minimal | Git configuration (`~/.gitconfig.local` with signing and SSH rewrite only in the full profile) |
+| `git` | minimal | Git configuration (`~/.gitconfig.local` with the GitHub SSH rewrite only in the full profile; commit signing on macOS only) |
 | `tmux` | minimal | Tmux, powerline theme in the full profile, plain theme in minimal |
 | `htop` | minimal | Interactive process viewer |
 | `bash` | minimal | Bash with git prompt |

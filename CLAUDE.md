@@ -100,7 +100,7 @@ The same rules apply to `--uninstall`: a plain `--uninstall` removes the basic s
 The `minimal` keyword also selects the minimal profile: the same components with the stylish and machine-specific parts off. `basic`/`all` (or no components) select the full profile. The choice is written to `~/.local/state/dotx/profile` by `save_profile()` so that a later run with only component names (`./bootstrap.sh tmux`) keeps it; a whole-tier `--uninstall` clears it (`clear_profile()`). `bootstrap.sh` resolves it (`resolve_profile()`: requested > stored > full), prints it in the header and exports it. What the profile changes:
 
 - `tmux`: full links `~/.tmux.conf.local` (powerline theme) and installs the powerline fonts; minimal additionally links `~/.tmux.conf.plain` (sourced after `.tmux.conf.local`, sets `tmux_conf_theme=default` and disables the battery segment) and skips the fonts. Switching back to full removes the overlay.
-- `git`: `common/git/.gitconfig` holds the portable part (aliases, tools, identity) and ends with `[include] path = ~/.gitconfig.local`; full links `platform/<os>/.gitconfig.<os>` there (SSH commit signing, the GitHub `https://` → `git@github.com:` rewrite, on macOS the `gh` credential helper), minimal links nothing so commits need no signing key and clones stay on HTTPS.
+- `git`: `common/git/.gitconfig` holds the portable part (aliases, tools, identity) and ends with `[include] path = ~/.gitconfig.local`; full links `platform/<os>/.gitconfig.<os>` there (the GitHub `https://` → `git@github.com:` rewrite on both; SSH commit signing and the `gh` credential helper on macOS only, so no Linux machine ever needs the signing key), minimal links nothing so clones stay on HTTPS.
 - macOS `tmux`: `iterm2.sh` runs only in the full profile.
 
 ### Platform Setup
@@ -162,7 +162,7 @@ fi
 
 **Platform-specific configs:**
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
-- `~/.gitconfig.local` → `platform/{macos,ubuntu}/.gitconfig.{macos,ubuntu}` (full profile only; commit signing, SSH rewrite of GitHub URLs, `gh` credential helper on macOS)
+- `~/.gitconfig.local` → `platform/{macos,ubuntu}/.gitconfig.{macos,ubuntu}` (full profile only; SSH rewrite of GitHub URLs on both, commit signing and `gh` credential helper on macOS only)
 - `~/.tmux.conf.plain` → `common/tmux/.tmux.conf.plain` (minimal profile only; plain theme overrides)
 
 **macOS packages (Homebrew):** bash, tmux, htop, pipx, gcloud-cli (cask), awscli, lima, colima + docker + docker-compose + docker-buildx + docker-credential-helper
