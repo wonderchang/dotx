@@ -21,6 +21,8 @@ check ".bash_profile" link_to ~/.bash_profile "$DOTX_DIR"/common/bash/.bash_prof
 check ".bashrc.local" link_to ~/.bashrc.local "$DOTX_DIR"/platform/ubuntu/.bashrc.ubuntu
 check ".gitconfig.local" link_to ~/.gitconfig.local "$DOTX_DIR"/platform/ubuntu/.gitconfig.ubuntu
 check "bgp theme"     link_to ~/.bash-git-prompt/themes/WonderChang.bgptheme "$DOTX_DIR"/common/bash/WonderChang.bgptheme
+check "claude CLAUDE.md" link_to ~/.claude/CLAUDE.md "$DOTX_DIR"/common/claude/CLAUDE.md
+check "claude rules/"    link_to ~/.claude/rules     "$DOTX_DIR"/common/claude/rules
 check "no .tmux.conf.plain (full profile)" bash -c '[ ! -e ~/.tmux.conf.plain ] && [ ! -L ~/.tmux.conf.plain ]'
 check "profile file says full" bash -c '[ "$(cat ~/.local/state/dotx/profile)" = full ]'
 

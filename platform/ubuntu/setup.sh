@@ -123,6 +123,10 @@ install_ubuntu() {
     echo ""
   fi
 
+  if should_install_component "claude"; then
+    bash "$PROJECT_ROOT/common/claude/setup.sh" install
+  fi
+
   if should_install_component "gcloud"; then
     bash "$SCRIPT_DIR/gcloud.sh" install
     echo ""
@@ -224,6 +228,10 @@ uninstall_ubuntu() {
     echo "=== Rust Build Dependencies Uninstall ==="
     uninstall_apt_packages_for rust
     echo ""
+  fi
+
+  if should_install_component "claude"; then
+    bash "$PROJECT_ROOT/common/claude/setup.sh" uninstall
   fi
 
   if should_install_component "gcloud"; then

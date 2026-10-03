@@ -216,6 +216,10 @@ install_macos() {
     echo ""
   fi
 
+  if should_install_component "claude"; then
+    bash "$PROJECT_ROOT/common/claude/setup.sh" install
+  fi
+
   if should_install_component "gcloud"; then
     echo "=== Google Cloud CLI ==="
     # The cask pulls in python@3.14, creates ~/.config/gcloud/virtenv on it,
@@ -317,6 +321,10 @@ uninstall_macos() {
   if should_install_component "rust"; then
     bash "$PROJECT_ROOT/common/rust/setup.sh" uninstall
     echo ""
+  fi
+
+  if should_install_component "claude"; then
+    bash "$PROJECT_ROOT/common/claude/setup.sh" uninstall
   fi
 
   if should_install_component "gcloud"; then

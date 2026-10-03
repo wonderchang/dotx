@@ -42,7 +42,7 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ```
 
 **Minimal components:** `vim`, `git`, `tmux`, `htop`, `bash`
-**Basic components (default):** minimal + `nvm`, `pyenv`, `pipx`, `uv`, `rust`
+**Basic components (default):** minimal + `nvm`, `pyenv`, `pipx`, `uv`, `rust`, `claude`
 **Optional components (only when named):** `gcloud`, `aws`, `lima`, `docker`
 **Keywords:** `minimal` (minimal set + minimal profile), `basic` (the default set), `all` (basic + optional)
 
@@ -53,6 +53,7 @@ dotx/
 ├── bootstrap.sh                    # Main entry point
 ├── common/                         # Cross-platform configs
 │   ├── bash/                       # Bash config + bash-git-prompt
+│   ├── claude/                     # Claude Code personal instructions (CLAUDE.md + rules/)
 │   ├── git/                        # Git config
 │   ├── vim/                        # Vim config + vim-plug
 │   ├── tmux/                       # Tmux config + powerline fonts
@@ -103,6 +104,7 @@ The `minimal` keyword also selects the minimal profile: the same components with
 - `tmux`: full links `~/.tmux.conf.local` (powerline theme) and installs the powerline fonts; minimal additionally links `~/.tmux.conf.plain` (sourced after `.tmux.conf.local`, sets `tmux_conf_theme=default` and disables the battery segment) and skips the fonts. Switching back to full removes the overlay.
 - `git`: `common/git/.gitconfig` holds the portable part (aliases, tools, identity) and ends with `[include] path = ~/.gitconfig.local`; full links `platform/<os>/.gitconfig.<os>` there (the GitHub `https://` → `git@github.com:` rewrite on both; SSH commit signing and the `gh` credential helper on macOS only, so no Linux machine ever needs the signing key), minimal links nothing so clones stay on HTTPS.
 - macOS `tmux`: `iterm2.sh` runs only in the full profile.
+- `claude` is in the basic tier, not minimal: `~/.claude/CLAUDE.md` is one person's preferences (language, safety) and `~/.claude/rules/` the how-to (thinking, output, engineering), which Claude Code auto-loads from that directory in every project. Only these two entries are symlinked (`common/claude/setup.sh`); `~/.claude` itself is machine state (`settings.json`, history, sessions, plugins) and is never replaced, the `claude` binary is not installed, and uninstall removes `~/.claude` only if it is left empty. Skills and output styles are deliberately not part of it: the built-in `Concise` output style already does what a custom one would, and a custom style drops Claude Code's coding instructions unless `keep-coding-instructions: true`. A session started with `CLAUDE_CONFIG_DIR=<dir>` reads `<dir>/CLAUDE.md` and `<dir>/rules` and does not fall back to `~/.claude` (verified with `claude -p`), so the same two links also go into `~/.claude-work` (the `claude-work` alias in `.bashrc`) when that directory exists, plus any directory in `DOTX_CLAUDE_CONFIG_DIRS` (colon-separated); none of those is created.
 
 ### Platform Setup
 
@@ -165,6 +167,7 @@ fi
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
 - `~/.gitconfig.local` → `platform/{macos,ubuntu}/.gitconfig.{macos,ubuntu}` (full profile only; SSH rewrite of GitHub URLs on both, commit signing and `gh` credential helper on macOS only)
 - `~/.tmux.conf.plain` → `common/tmux/.tmux.conf.plain` (minimal profile only; plain theme overrides)
+- `~/.claude/CLAUDE.md` → `common/claude/CLAUDE.md`, `~/.claude/rules` → `common/claude/rules/` (basic tier; personal Claude Code instructions)
 
 **macOS packages (Homebrew):** bash, tmux, htop, pipx, gcloud-cli (cask), awscli, lima, colima + docker + docker-compose + docker-buildx + docker-credential-helper
 

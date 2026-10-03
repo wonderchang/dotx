@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 
 | You are setting up… | Run | You get |
 |---|---|---|
-| **Your own workstation** (Mac or Ubuntu desktop) | `./bootstrap.sh` | the shell experience + Node, Python and Rust toolchains, powerline fonts, iTerm2 profile on macOS, GitHub over SSH |
+| **Your own workstation** (Mac or Ubuntu desktop) | `./bootstrap.sh` | the shell experience + Node, Python and Rust toolchains, personal Claude Code instructions, powerline fonts, iTerm2 profile on macOS, GitHub over SSH |
 | **A server, a container, WSL, a colleague's box** | `./bootstrap.sh minimal` | the shell experience only: vim, git, tmux, htop, bash. Plain tmux theme, no fonts, no toolchains, no signing key, clones stay on HTTPS |
 | **A workstation that also does cloud / VM / container work** | `./bootstrap.sh all` or `./bootstrap.sh basic gcloud docker` | everything above plus gcloud, aws, lima and docker |
 | **Just one tool** | `./bootstrap.sh tmux` | that component only, in whatever profile the machine already has |
@@ -72,8 +72,9 @@ What makes any box feel like yours, with nothing that assumes it *is* yours.
 
 ### `basic` (default): a workstation
 
-`minimal` in the full profile, plus the toolchains. Everything installs into
-your home directory and is wired into `.bashrc`.
+`minimal` in the full profile, plus the toolchains and personal AI-assistant
+instructions. Everything installs into your home directory and is wired into
+`.bashrc`.
 
 | Component | Installs |
 |---|---|
@@ -82,6 +83,7 @@ your home directory and is wired into `.bashrc`.
 | `pipx` | Python app installer (Homebrew / APT) |
 | `uv` | Python package and project manager in `~/.local/bin` |
 | `rust` | rustup toolchain in `~/.cargo`, `build-essential` on Ubuntu |
+| `claude` | personal Claude Code instructions: `~/.claude/CLAUDE.md` (language, safety) and `~/.claude/rules/` (thinking, output, engineering), loaded in every project. Config only; `~/.claude` state and the `claude` binary are not touched |
 
 ### Optional: only when named
 

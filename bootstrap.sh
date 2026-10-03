@@ -11,7 +11,7 @@
 #   --dry-run   Preview changes without applying them
 #
 # Components:
-#   basic ones (vim, git, tmux, htop, bash, nvm, pyenv, pipx, uv, rust) are installed
+#   basic ones (vim, git, tmux, htop, bash, nvm, pyenv, pipx, uv, rust, claude) are installed
 #   by default; optional ones (gcloud, aws, lima, docker) only when named.
 #   `minimal` = vim git tmux htop bash with the stylish parts turned off,
 #   `all` = basic + optional. See utils/components.sh.
@@ -134,6 +134,7 @@ while [[ $# -gt 0 ]]; do
       echo "  pipx        Python application installer"
       echo "  uv          Python package and project manager"
       echo "  rust        Rust programming language (via rustup)"
+      echo "  claude      Claude Code personal instructions (~/.claude/CLAUDE.md, rules/)"
       echo ""
       echo "Optional components (only when named explicitly):"
       echo "  gcloud      Google Cloud CLI (gcloud, gsutil, bq)"

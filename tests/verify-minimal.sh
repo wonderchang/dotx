@@ -23,6 +23,7 @@ check ".bash_profile"    link_to ~/.bash_profile    "$DOTX_DIR"/common/bash/.bas
 check ".bashrc.local"    link_to ~/.bashrc.local    "$DOTX_DIR"/platform/ubuntu/.bashrc.ubuntu
 check "bgp theme"        link_to ~/.bash-git-prompt/themes/WonderChang.bgptheme "$DOTX_DIR"/common/bash/WonderChang.bgptheme
 check "no ~/.gitconfig.local (no signing key, no SSH rewrite)" gone ~/.gitconfig.local
+check "no ~/.claude/CLAUDE.md (personal, basic tier only)" gone ~/.claude/CLAUDE.md
 
 echo "--- profile remembered"
 check "profile file says minimal" bash -c '[ "$(cat ~/.local/state/dotx/profile)" = minimal ]'

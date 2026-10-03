@@ -8,7 +8,8 @@
 #              bash. Meant for servers, containers, WSL, other people's
 #              machines. Same key bindings and aliases, no fonts, no terminal
 #              integration, no language toolchains.
-#   basic    - minimal + the workstation toolchains; installed by a plain
+#   basic    - minimal + the workstation toolchains and the personal Claude
+#              Code instructions; installed by a plain
 #              `./bootstrap.sh` (and removed by a plain `./bootstrap.sh --uninstall`)
 #   optional - only touched when named explicitly, e.g. `./bootstrap.sh gcloud aws`
 #
@@ -31,7 +32,7 @@
 # The caller sets COMPONENTS=(...) from the command line; it may be empty.
 
 MINIMAL_COMPONENTS=(vim git tmux htop bash)
-BASIC_COMPONENTS=(vim git tmux htop bash nvm pyenv pipx uv rust)
+BASIC_COMPONENTS=(vim git tmux htop bash nvm pyenv pipx uv rust claude)
 OPTIONAL_COMPONENTS=(gcloud aws lima docker)
 DOTX_PROFILE_FILE="$HOME/.local/state/dotx/profile"
 
