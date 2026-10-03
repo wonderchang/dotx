@@ -88,12 +88,13 @@ dotx/
 
 Three tiers, defined in `utils/components.sh` (`MINIMAL_COMPONENTS`, `BASIC_COMPONENTS`, `OPTIONAL_COMPONENTS`):
 
-- **No components** or **`basic`** → the basic set
+- **`basic`** → the basic set
 - **`minimal`** → the minimal set (vim git tmux htop bash)
 - **`all`** → basic + optional (everything dotx knows)
+- **No components** → the tier this machine was set up with: minimal if the stored profile is minimal, otherwise basic. A bare re-run never turns a minimal machine into a workstation; only an explicit `basic` or `all` does
 - **Specific components** → exactly those (`basic gcloud` = basic set plus gcloud)
 
-The same rules apply to `--uninstall`: a plain `--uninstall` removes the basic set, `--uninstall all` also removes optional components. `should_install_component()` in `utils/components.sh` implements this and is shared by both platform setup scripts.
+The same rules apply to `--uninstall`: a plain `--uninstall` removes the tier the machine was set up with, `--uninstall all` also removes optional components. `should_install_component()` in `utils/components.sh` implements this and is shared by both platform setup scripts.
 
 ### Profile (`$DOTX_PROFILE`: `minimal` or `full`)
 

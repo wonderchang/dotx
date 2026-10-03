@@ -46,9 +46,11 @@ main() {
 
   # Profile: requested on the command line (`minimal`, or `basic`/`all` for
   # full), else the one remembered from the last whole-tier install, else
-  # full. Remembered on install, forgotten when a whole tier is uninstalled.
+  # full. A bare `./bootstrap.sh` therefore re-applies whatever tier this
+  # machine has. Remembered on a whole-tier install, forgotten on a
+  # whole-tier uninstall.
   DOTX_PROFILE=$(resolve_profile)
-  if [ "$MODE" = "install" ] && [ -n "$(requested_profile)" ]; then
+  if [ "$MODE" = "install" ] && is_whole_tier; then
     save_profile "$DOTX_PROFILE"
   fi
 
@@ -85,7 +87,7 @@ main() {
       ;;
   esac
 
-  if [ "$MODE" = "uninstall" ] && [ -n "$(requested_profile)" ]; then
+  if [ "$MODE" = "uninstall" ] && is_whole_tier; then
     clear_profile
   fi
 }
@@ -140,15 +142,17 @@ while [[ $# -gt 0 ]]; do
       echo "  docker      Docker (colima on macOS, Docker Engine on Ubuntu)"
       echo ""
       echo "Selection keywords:"
-      echo "  basic       The basic components (same as giving none)"
+      echo "  basic       The basic components"
       echo "  minimal     vim git tmux htop bash only, with the stylish parts off:"
       echo "              plain tmux theme, no powerline fonts, no iTerm2 setup, no"
       echo "              machine-specific git signing/credentials. For servers, WSL,"
       echo "              containers. Remembered until 'basic' or 'all' is run."
       echo "  all         Basic + optional components"
+      echo "  (none)      Re-apply the tier this machine was set up with:"
+      echo "              minimal if it was installed with 'minimal', otherwise basic"
       echo ""
       echo "Examples:"
-      echo "  $0                         # Install the basic components"
+      echo "  $0                         # Install basic (or re-apply minimal on a minimal machine)"
       echo "  $0 --dry-run               # Preview that"
       echo "  $0 gcloud                  # Install only gcloud"
       echo "  $0 basic gcloud            # Basic components plus gcloud"
@@ -157,7 +161,7 @@ while [[ $# -gt 0 ]]; do
       echo "  $0 --install vim git       # Install only vim and git"
       echo "  $0 --dry-run --install vim # Preview vim installation"
       echo "  $0 --uninstall vim         # Uninstall only vim"
-      echo "  $0 --uninstall             # Uninstall the basic components"
+      echo "  $0 --uninstall             # Uninstall the tier this machine was set up with"
       echo "  $0 --uninstall all         # Uninstall everything, including optional"
       echo "  $0 --uninstall minimal     # Uninstall the minimal components"
       exit 0

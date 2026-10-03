@@ -13,17 +13,20 @@
 #   optional - only touched when named explicitly, e.g. `./bootstrap.sh gcloud aws`
 #
 # Selection keywords:
-#   (nothing) or `basic`  → the basic set
+#   `basic`               → the basic set
 #   `minimal`             → the minimal set (and the minimal profile, below)
 #   `all`                 → basic + optional, i.e. everything dotx knows
+#   (nothing)             → the tier this machine was set up with: minimal if
+#                           the stored profile is minimal, otherwise basic
 #   component names       → exactly those; `basic gcloud` = basic set + gcloud
 #
 # Profile: `minimal` installs its components with the stylish parts turned
 # off (plain tmux theme instead of powerline, no powerline fonts, no iTerm2
 # setup, no machine-specific ~/.gitconfig.local). The choice is remembered in
-# ~/.local/state/dotx/profile so that a later `./bootstrap.sh tmux` on a
-# minimal machine stays plain; `basic` or `all` switch back to the full
-# profile. Component scripts read it as $DOTX_PROFILE ("minimal" or "full").
+# ~/.local/state/dotx/profile so that a later `./bootstrap.sh` or
+# `./bootstrap.sh tmux` on a minimal machine stays minimal; only an explicit
+# `basic` or `all` switches back to the full profile. Component scripts read
+# it as $DOTX_PROFILE ("minimal" or "full").
 #
 # The caller sets COMPONENTS=(...) from the command line; it may be empty.
 
@@ -75,8 +78,8 @@ should_install_component() {
     return 0
   fi
 
-  # Nothing given, or `basic`: the basic set only
-  if [ ${#COMPONENTS[@]} -eq 0 ] || _in_list basic ${COMPONENTS[@]+"${COMPONENTS[@]}"}; then
+  # `basic`: the basic set only
+  if _in_list basic ${COMPONENTS[@]+"${COMPONENTS[@]}"}; then
     if is_basic_component "$component"; then
       return 0
     fi
@@ -89,19 +92,36 @@ should_install_component() {
     fi
   fi
 
+  # Nothing given: the tier this machine was set up with (bootstrap resolves
+  # and exports DOTX_PROFILE before the platform scripts run), so re-running
+  # `./bootstrap.sh` on a minimal machine stays minimal instead of silently
+  # turning it into a workstation
+  if [ ${#COMPONENTS[@]} -eq 0 ]; then
+    if [ "${DOTX_PROFILE:-full}" = "minimal" ]; then
+      is_minimal_component "$component" && return 0
+    else
+      is_basic_component "$component" && return 0
+    fi
+  fi
+
   return 1
 }
 
-# Profile asked for on this command line: "full" (nothing, `basic` or
-# `all`), "minimal", or "" when only component names were given, which keeps
-# whatever profile is stored.
+# A whole tier is being installed or uninstalled (nothing given, or a
+# keyword), as opposed to individual components
+is_whole_tier() {
+  [ ${#COMPONENTS[@]} -eq 0 ] || _in_list minimal ${COMPONENTS[@]+"${COMPONENTS[@]}"} \
+    || _in_list basic ${COMPONENTS[@]+"${COMPONENTS[@]}"} || _in_list all ${COMPONENTS[@]+"${COMPONENTS[@]}"}
+}
+
+# Profile asked for on this command line: "full" for `basic` or `all`,
+# "minimal" for `minimal`, or "" when nothing or only component names were
+# given, which keeps whatever profile is stored (full if none).
 requested_profile() {
   if _in_list basic ${COMPONENTS[@]+"${COMPONENTS[@]}"} || _in_list all ${COMPONENTS[@]+"${COMPONENTS[@]}"}; then
     echo "full"
   elif _in_list minimal ${COMPONENTS[@]+"${COMPONENTS[@]}"}; then
     echo "minimal"
-  elif [ ${#COMPONENTS[@]} -eq 0 ]; then
-    echo "full"
   else
     echo ""
   fi
@@ -132,7 +152,9 @@ clear_profile() {
 
 # One line describing the selection, for the bootstrap header
 describe_components() {
-  if [ ${#COMPONENTS[@]} -eq 0 ]; then
+  if [ ${#COMPONENTS[@]} -eq 0 ] && [ "${DOTX_PROFILE:-full}" = "minimal" ]; then
+    echo "minimal (${MINIMAL_COMPONENTS[*]}), as this machine was set up"
+  elif [ ${#COMPONENTS[@]} -eq 0 ]; then
     echo "basic (${BASIC_COMPONENTS[*]})"
   elif [ "${COMPONENTS[*]}" = "minimal" ]; then
     echo "minimal (${MINIMAL_COMPONENTS[*]})"

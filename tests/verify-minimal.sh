@@ -26,6 +26,11 @@ check "no ~/.gitconfig.local (no signing key, no SSH rewrite)" gone ~/.gitconfig
 
 echo "--- profile remembered"
 check "profile file says minimal" bash -c '[ "$(cat ~/.local/state/dotx/profile)" = minimal ]'
+# a bare re-run must stay minimal: no toolchains, no fonts
+bare=$(cd "$DOTX_DIR" && ./bootstrap.sh --dry-run 2>&1)
+check "bare ./bootstrap.sh resolves to minimal"  bash -c "grep -q 'Profile: minimal' <<< '$bare'"
+check "bare ./bootstrap.sh would not touch nvm/pyenv/rust" bash -c "! grep -qE '^=== (NVM|pyenv Setup|Rust Setup|pipx)' <<< '$bare'"
+check "bare ./bootstrap.sh would not install fonts" bash -c "grep -q 'Powerline fonts skipped' <<< '$bare'"
 
 echo "--- packages"
 check "vim"  dpkg -s vim

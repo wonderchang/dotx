@@ -15,7 +15,7 @@ For implementation details (directory layout, command usage, adding components),
 A fresh machine gets a complete development environment with a single command.
 
 ```bash
-./bootstrap.sh            # install the basic components
+./bootstrap.sh            # install the basic components (re-apply minimal on a minimal machine)
 ./bootstrap.sh vim tmux   # install specific components
 ./bootstrap.sh gcloud     # optional components are installed only when named
 ./bootstrap.sh all        # everything, basic and optional
@@ -34,7 +34,7 @@ A fresh machine gets a complete development environment with a single command.
 Whatever gets installed can be removed completely with a single command.
 
 ```bash
-./bootstrap.sh --uninstall              # uninstall the basic components
+./bootstrap.sh --uninstall              # uninstall the tier this machine was set up with
 ./bootstrap.sh --uninstall tmux         # uninstall specific components
 ./bootstrap.sh --uninstall all          # uninstall everything, basic and optional
 ./bootstrap.sh --uninstall minimal      # uninstall the minimal components

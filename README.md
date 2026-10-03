@@ -88,7 +88,7 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 ## Usage
 
 ```bash
-# Install the basic components
+# Install the basic components (on a machine set up with `minimal`, re-apply minimal)
 ./bootstrap.sh
 
 # Install specific components (optional ones like gcloud only this way)
@@ -115,7 +115,7 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 
 ## Components
 
-Basic components are installed by a plain `./bootstrap.sh`; optional ones only when named explicitly. `minimal` installs the first five with the stylish parts turned off (plain tmux theme, no powerline fonts, no iTerm2 setup, no machine-specific git signing or SSH rewrite), which is what you want on a server, in a container or on WSL. The choice is remembered, so a later `./bootstrap.sh tmux` on that machine stays plain until you run `basic` or `all`.
+Basic components are installed by a plain `./bootstrap.sh`; optional ones only when named explicitly. `minimal` installs the first five with the stylish parts turned off (plain tmux theme, no powerline fonts, no iTerm2 setup, no machine-specific git signing or SSH rewrite), which is what you want on a server, in a container or on WSL. The choice is remembered, so a later `./bootstrap.sh` or `./bootstrap.sh tmux` on that machine stays minimal until you explicitly run `basic` or `all`.
 
 | Component | Tier | Description |
 |-----------|------|-------------|
