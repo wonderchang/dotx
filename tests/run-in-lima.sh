@@ -5,12 +5,15 @@
 # before is gone. Run from macOS with Lima installed (./bootstrap.sh lima).
 #
 # Usage:
-#   tests/run-in-lima.sh            # reuse the dotx-ubuntu VM (create if missing)
-#   tests/run-in-lima.sh --fresh    # delete and recreate the VM first (strict run)
-#   tests/run-in-lima.sh --stop     # stop the VM when done
+#   tests/run-in-lima.sh                    # reuse the dotx-ubuntu VM (create if missing)
+#   tests/run-in-lima.sh --fresh            # delete and recreate the VM first (strict run)
+#   tests/run-in-lima.sh --profile=minimal  # test `./bootstrap.sh minimal` instead of `all`
+#   tests/run-in-lima.sh --stop             # stop the VM when done
 #
-# The working tree (not just committed files) is synced into the VM, so this
-# tests what you are about to commit. Exit code = number of failed checks.
+# Environment: LIMA_INSTANCE (default dotx-ubuntu), LIMA_TEMPLATE (default
+# template:ubuntu-lts). The working tree (not just committed files) is synced
+# into the VM, so this tests what you are about to commit. Exit code = number
+# of failed checks.
 
 set -eu
 
@@ -20,14 +23,22 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STATE=/tmp/dotx-test          # inside the VM
 FRESH=false
 STOP=false
+PROFILE=full
 
 for arg in "$@"; do
   case "$arg" in
     --fresh) FRESH=true ;;
     --stop)  STOP=true ;;
-    *) echo "Unknown option: $arg"; sed -n '2,15p' "$0"; exit 2 ;;
+    --profile=full|--profile=minimal) PROFILE="${arg#--profile=}" ;;
+    *) echo "Unknown option: $arg"; sed -n '2,17p' "$0"; exit 2 ;;
   esac
 done
+
+# What to pass to bootstrap and which checks to run for the chosen profile
+case "$PROFILE" in
+  full)    KEYWORD=all;     CHECKS="verify-basic.sh verify-optional.sh" ;;
+  minimal) KEYWORD=minimal; CHECKS="verify-minimal.sh" ;;
+esac
 
 case "$REPO_ROOT" in
   "$HOME"/*) ;;
@@ -56,7 +67,7 @@ run_bootstrap() {
   fi
 }
 
-step "VM: $INSTANCE"
+step "VM: $INSTANCE (profile: $PROFILE)"
 if [ "$FRESH" = "true" ]; then
   limactl delete -f "$INSTANCE" 2>/dev/null || true
 fi
@@ -76,18 +87,18 @@ fi
 vm "mkdir -p $STATE && dpkg-query -W -f='\${Package} \${db:Status-Status}\n' | awk '\$2 == \"installed\" {print \$1}' | LC_ALL=C sort > $STATE/pkgs-baseline.txt && cp ~/.bashrc $STATE/bashrc.orig 2>/dev/null || true; echo \"\$(wc -l < $STATE/pkgs-baseline.txt) packages installed\""
 
 step "Sync working tree into the VM"
-vm "rsync -a --delete --exclude .git '$REPO_ROOT/' ~/dotx/ && cd ~/dotx && ./bootstrap.sh --dry-run all > $STATE/dry-run.log 2>&1 && echo '✓ dry-run ok'"
+vm "rsync -a --delete --exclude .git '$REPO_ROOT/' ~/dotx/ && cd ~/dotx && ./bootstrap.sh --dry-run $KEYWORD > $STATE/dry-run.log 2>&1 && echo '✓ dry-run ok'"
 
-step "Install everything"
-run_bootstrap install-all.log all
+step "Install: ./bootstrap.sh $KEYWORD"
+run_bootstrap install.log "$KEYWORD"
 
-step "Verify basic components"
-run_checks verify-basic.sh
-step "Verify optional components"
-run_checks verify-optional.sh
+for script in $CHECKS; do
+  step "Verify: $script"
+  run_checks "$script"
+done
 
 step "Re-run install (must be a no-op)"
-run_bootstrap install-again.log all
+run_bootstrap install-again.log "$KEYWORD"
 redo=$(vm "grep -cE '^(Installing|Cloning|Downloading)' $STATE/install-again.log" || true)
 if [ "${redo:-0}" -eq 0 ]; then
   echo "✓ nothing re-installed"
@@ -97,8 +108,8 @@ else
   failures=$((failures + 1))
 fi
 
-step "Uninstall everything"
-run_bootstrap uninstall-all.log --uninstall all
+step "Uninstall: ./bootstrap.sh --uninstall $KEYWORD"
+run_bootstrap uninstall.log --uninstall "$KEYWORD"
 
 step "Verify nothing is left"
 run_checks verify-clean.sh

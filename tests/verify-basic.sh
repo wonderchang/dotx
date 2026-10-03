@@ -19,7 +19,10 @@ check ".tmux.conf.local" link_to ~/.tmux.conf.local "$DOTX_DIR"/common/tmux/.tmu
 check ".bashrc"       link_to ~/.bashrc       "$DOTX_DIR"/common/bash/.bashrc
 check ".bash_profile" link_to ~/.bash_profile "$DOTX_DIR"/common/bash/.bash_profile
 check ".bashrc.local" link_to ~/.bashrc.local "$DOTX_DIR"/platform/ubuntu/.bashrc.ubuntu
+check ".gitconfig.local" link_to ~/.gitconfig.local "$DOTX_DIR"/platform/ubuntu/.gitconfig.ubuntu
 check "bgp theme"     link_to ~/.bash-git-prompt/themes/WonderChang.bgptheme "$DOTX_DIR"/common/bash/WonderChang.bgptheme
+check "no .tmux.conf.plain (full profile)" bash -c '[ ! -e ~/.tmux.conf.plain ] && [ ! -L ~/.tmux.conf.plain ]'
+check "profile file says full" bash -c '[ "$(cat ~/.local/state/dotx/profile)" = full ]'
 
 echo "--- packages"
 check "vim"  dpkg -s vim

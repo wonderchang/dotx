@@ -1,0 +1,6 @@
+# ~/.tmux.conf.plain: linked by dotx in the minimal profile and sourced after
+# ~/.tmux.conf.local, so these override it. Key bindings and status line
+# contents stay the same; only what needs a Powerline-patched font or a
+# laptop battery goes.
+tmux_conf_theme=default
+tmux_conf_theme_battery=disabled

@@ -28,7 +28,6 @@
 [user]
   name = Wonder Chang
   email = iwonder.tw@gmail.com
-  signingkey = ~/.ssh/id_ed25519_git.pub
 
 [gpg]
   format = ssh
@@ -36,15 +35,10 @@
 [gpg "ssh"]
   allowedSignersFile = ~/.ssh/allowed_signers
 
-[commit]
-  gpgsign = true
-
-[credential "https://github.com"]
-
-  helper = !/opt/homebrew/bin/gh auth git-credential
-
-[credential "https://gist.github.com"]
-  helper = !/opt/homebrew/bin/gh auth git-credential
-
-[url "git@github.com:"]
-  insteadOf = https://github.com/
+# Machine-specific settings (commit signing key, credential helper, SSH
+# rewrite of GitHub URLs) live in ~/.gitconfig.local, which dotx links from
+# platform/<os>/.gitconfig.<os> in the full profile. The minimal profile
+# (servers, containers, WSL) links nothing, so commits work without a signing
+# key and clones stay on HTTPS. git ignores a missing include.
+[include]
+  path = ~/.gitconfig.local

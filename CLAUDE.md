@@ -41,9 +41,10 @@ Cross-platform dotfiles management tool for **macOS** and **Ubuntu/Debian** usin
 ./bootstrap.sh --help
 ```
 
-**Basic components (default):** `vim`, `git`, `tmux`, `htop`, `bash`, `nvm`, `pyenv`, `pipx`, `uv`, `rust`
+**Minimal components:** `vim`, `git`, `tmux`, `htop`, `bash`
+**Basic components (default):** minimal + `nvm`, `pyenv`, `pipx`, `uv`, `rust`
 **Optional components (only when named):** `gcloud`, `aws`, `lima`, `docker`
-**Keywords:** `basic` (the default set), `all` (basic + optional)
+**Keywords:** `minimal` (minimal set + minimal profile), `basic` (the default set), `all` (basic + optional)
 
 ## Directory Structure
 
@@ -66,7 +67,7 @@ dotx/
 └── utils/                          # Shared utilities
     ├── detect.sh                   # Platform detection
     ├── shell.sh                    # Shell switching
-    ├── components.sh               # Basic/optional component tiers + selection
+    ├── components.sh               # Minimal/basic/optional tiers, selection, profile
     ├── sudo.sh                     # One-time password prompt + sudo keepalive
     └── symlink.sh                  # Symlink management
 ```
@@ -85,13 +86,22 @@ dotx/
 
 ### Component Selection
 
-Two tiers, defined in `utils/components.sh` (`BASIC_COMPONENTS`, `OPTIONAL_COMPONENTS`):
+Three tiers, defined in `utils/components.sh` (`MINIMAL_COMPONENTS`, `BASIC_COMPONENTS`, `OPTIONAL_COMPONENTS`):
 
 - **No components** or **`basic`** → the basic set
+- **`minimal`** → the minimal set (vim git tmux htop bash)
 - **`all`** → basic + optional (everything dotx knows)
 - **Specific components** → exactly those (`basic gcloud` = basic set plus gcloud)
 
 The same rules apply to `--uninstall`: a plain `--uninstall` removes the basic set, `--uninstall all` also removes optional components. `should_install_component()` in `utils/components.sh` implements this and is shared by both platform setup scripts.
+
+### Profile (`$DOTX_PROFILE`: `minimal` or `full`)
+
+The `minimal` keyword also selects the minimal profile: the same components with the stylish and machine-specific parts off. `basic`/`all` (or no components) select the full profile. The choice is written to `~/.local/state/dotx/profile` by `save_profile()` so that a later run with only component names (`./bootstrap.sh tmux`) keeps it; a whole-tier `--uninstall` clears it (`clear_profile()`). `bootstrap.sh` resolves it (`resolve_profile()`: requested > stored > full), prints it in the header and exports it. What the profile changes:
+
+- `tmux`: full links `~/.tmux.conf.local` (powerline theme) and installs the powerline fonts; minimal additionally links `~/.tmux.conf.plain` (sourced after `.tmux.conf.local`, sets `tmux_conf_theme=default` and disables the battery segment) and skips the fonts. Switching back to full removes the overlay.
+- `git`: `common/git/.gitconfig` holds the portable part (aliases, tools, identity) and ends with `[include] path = ~/.gitconfig.local`; full links `platform/<os>/.gitconfig.<os>` there (SSH commit signing, the GitHub `https://` → `git@github.com:` rewrite, on macOS the `gh` credential helper), minimal links nothing so commits need no signing key and clones stay on HTTPS.
+- macOS `tmux`: `iterm2.sh` runs only in the full profile.
 
 ### Platform Setup
 
@@ -117,7 +127,7 @@ fi
 - `docker` (`docker.sh`) is colima + the Homebrew `docker` CLI with `docker-compose`, `docker-buildx` and `docker-credential-helper`, not Docker Desktop (its cask needs sudo in the postflight, the first launch must be clicked through, and it is paid for larger companies) and not Lima's own docker template (rootless; colima is rootful like Docker Desktop and sets the docker context itself). A colima `default` profile is created only when none exists (vz, virtiofs, Rosetta, `DOTX_COLIMA_CPU/MEMORY/DISK`, default 4/8/100) and only a profile dotx created is deleted on uninstall; `~/.docker/config.json` gets `cliPluginsExtraDirs` (Homebrew's plugin dir) and `credsStore: osxkeychain`, merged with python3 when the file exists. colima is not started at login (note printed: `brew services start colima`). Installed after lima and uninstalled before it because colima depends on the lima formula; `uninstall_brew_for` keeps a formula that another installed formula still uses
 
 **Ubuntu specifics:**
-- Runs `apt-get update` and installs base prerequisites `curl`, `git` and `build-essential` first (via `apt.sh`, never removed, the counterpart of Xcode CLT on macOS); the `git` component only manages `.gitconfig` and never removes the git package
+- Runs `apt-get update` and installs base prerequisites `curl`, `git` and, in the full profile only, `build-essential` first (via `apt.sh`, never removed, the counterpart of Xcode CLT on macOS; the minimal profile has nothing to compile); the `git` component only manages `.gitconfig` and never removes the git package
 - `pyenv` installs the build libraries from pyenv's suggested Ubuntu environment (`PYENV_BUILD_DEPS` in `setup.sh`: libssl-dev, zlib1g-dev, libbz2-dev, libreadline-dev, libsqlite3-dev, libncurses-dev, xz-utils, tk-dev, libxml2-dev, libxmlsec1-dev, libffi-dev, liblzma-dev) before pyenv itself and removes on uninstall the ones it installed
 - APT helpers live in `platform/ubuntu/apt-common.sh`. Components install their packages with `install_apt_packages_for <component> ...` (the component's own package for vim/tmux/pipx, dependencies for pyenv/aws/lima/gcloud), which records what was newly installed in `~/.local/state/dotx/apt/<component>`; `uninstall_apt_packages_for <component>` removes exactly that and then runs `apt-get autoremove`, so a package that was already on the machine is never removed (the image's own `vim`/`tmux` once went together with the `ubuntu-server` metapackage, and a pre-installed `xz-utils` dragged `build-essential` along). Plain `install_apt_package()` is only for the base prerequisites in `apt.sh`. Installed-state checks use `dpkg-query`, because `dpkg -l` lists multiarch packages as `name:arch`
 - `aws` uses the official AWS CLI v2 zip installer (`aws.sh`) into `~/.local/aws-cli` with symlinks in `~/.local/bin`, no sudo except `apt-get install unzip`; Ubuntu's APT `awscli` is v1 on 22.04. `~/.aws` is never touched
@@ -152,6 +162,8 @@ fi
 
 **Platform-specific configs:**
 - `~/.bashrc.local` → `platform/{macos,ubuntu}/.bashrc.{macos,ubuntu}`
+- `~/.gitconfig.local` → `platform/{macos,ubuntu}/.gitconfig.{macos,ubuntu}` (full profile only; commit signing, SSH rewrite of GitHub URLs, `gh` credential helper on macOS)
+- `~/.tmux.conf.plain` → `common/tmux/.tmux.conf.plain` (minimal profile only; plain theme overrides)
 
 **macOS packages (Homebrew):** bash, tmux, htop, pipx, gcloud-cli (cask), awscli, lima, colima + docker + docker-compose + docker-buildx + docker-credential-helper
 
@@ -219,7 +231,7 @@ fi
 
 ## Verifying the Ubuntu side in a Lima VM
 
-`tests/run-in-lima.sh [--fresh] [--stop]` does the whole cycle (snapshot, install all, `tests/verify-basic.sh`, `tests/verify-optional.sh`, no-op re-install, uninstall all, `tests/verify-clean.sh`) and exits with the number of failed checks; run it before committing anything that touches `platform/ubuntu/` or `common/`. By hand: `limactl start --name dotx-ubuntu --tty=false template:ubuntu-lts` gives a throwaway Ubuntu LTS with passwordless sudo and the macOS home mounted read-only at the same path. Inside it: `git clone /Users/<user>/dotx ~/dotx` (committed state) or `rsync -a --delete --exclude .git /Users/<user>/dotx/ ~/dotx/` (working tree), then run `./bootstrap.sh`, `./bootstrap.sh gcloud aws lima`, `./bootstrap.sh --uninstall all` and check the home directory between steps. Run it via `limactl shell dotx-ubuntu -- bash -lc '...'`; interactive-shell checks need a pty (`script -q -c "bash -lic ..." /dev/null`), otherwise bash prints job-control noise that is not a dotx problem. To check that uninstall only reverses install, snapshot `dpkg-query -W -f='${Package} ${db:Status-Status}\n' | awk '$2=="installed"{print $1}'` before and after (removed packages linger as `config-files`, so filter by state). On a fresh Ubuntu 26.04 image the expected residue after `--uninstall all` is the `build-essential` closure (a base prerequisite, kept by design) plus packages that APT keeps because base packages recommend them (`python3-venv`, `python3-tk`, `tk8.6` and a few font/X11 libs); nothing from the image may disappear.
+`tests/run-in-lima.sh [--fresh] [--profile=full|minimal] [--stop]` does the whole cycle (snapshot, install `all` or `minimal`, `tests/verify-basic.sh` + `tests/verify-optional.sh` or `tests/verify-minimal.sh`, no-op re-install, uninstall, `tests/verify-clean.sh`) and exits with the number of failed checks; run both profiles before committing anything that touches `platform/ubuntu/` or `common/`. `LIMA_INSTANCE=<name>` picks another VM, useful when two sessions test at once. By hand: `limactl start --name dotx-ubuntu --tty=false template:ubuntu-lts` gives a throwaway Ubuntu LTS with passwordless sudo and the macOS home mounted read-only at the same path. Inside it: `git clone /Users/<user>/dotx ~/dotx` (committed state) or `rsync -a --delete --exclude .git /Users/<user>/dotx/ ~/dotx/` (working tree), then run `./bootstrap.sh`, `./bootstrap.sh gcloud aws lima`, `./bootstrap.sh --uninstall all` and check the home directory between steps. Run it via `limactl shell dotx-ubuntu -- bash -lc '...'`; interactive-shell checks need a pty (`script -q -c "bash -lic ..." /dev/null`), otherwise bash prints job-control noise that is not a dotx problem. To check that uninstall only reverses install, snapshot `dpkg-query -W -f='${Package} ${db:Status-Status}\n' | awk '$2=="installed"{print $1}'` before and after (removed packages linger as `config-files`, so filter by state). On a fresh Ubuntu 26.04 image the expected residue after `--uninstall all` is the `build-essential` closure (a base prerequisite, kept by design) plus packages that APT keeps because base packages recommend them (`python3-venv`, `python3-tk`, `tk8.6` and a few font/X11 libs); nothing from the image may disappear.
 
 ## Troubleshooting
 

@@ -10,7 +10,7 @@ check() { local label="$1"; shift; if "$@" >/dev/null 2>&1; then echo "PASS  $la
 gone() { [ ! -e "$1" ] && [ ! -L "$1" ]; }
 
 echo "--- symlinks removed"
-for f in ~/.vimrc ~/.gitconfig ~/.tmux.conf ~/.tmux.conf.local ~/.bash_profile ~/.bashrc.local; do check "gone $f" gone "$f"; done
+for f in ~/.vimrc ~/.gitconfig ~/.gitconfig.local ~/.tmux.conf ~/.tmux.conf.local ~/.tmux.conf.plain ~/.bash_profile ~/.bashrc.local; do check "gone $f" gone "$f"; done
 if [ -f "$STATE/bashrc.orig" ]; then
   check ".bashrc restored to the pre-dotx original" bash -c "[ -f ~/.bashrc ] && [ ! -L ~/.bashrc ] && cmp -s ~/.bashrc '$STATE/bashrc.orig'"
 else

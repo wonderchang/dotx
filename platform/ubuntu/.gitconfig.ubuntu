@@ -1,0 +1,12 @@
+# ~/.gitconfig.local on an Ubuntu workstation (full profile): commits are
+# signed with the SSH key and GitHub is reached over SSH, like on macOS.
+# Needs ~/.ssh/id_ed25519_git.pub and a GitHub SSH key on the machine. The
+# minimal profile does not link this file at all.
+[user]
+  signingkey = ~/.ssh/id_ed25519_git.pub
+
+[commit]
+  gpgsign = true
+
+[url "git@github.com:"]
+  insteadOf = https://github.com/

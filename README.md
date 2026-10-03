@@ -99,6 +99,10 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 # Everything, including optional components
 ./bootstrap.sh all
 
+# Servers, containers, WSL, someone else's box: the shell experience only
+# (vim git tmux htop bash), plain tmux theme, no fonts, no git signing
+./bootstrap.sh minimal
+
 # Uninstall components
 ./bootstrap.sh --uninstall vim
 
@@ -111,15 +115,15 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 
 ## Components
 
-Basic components are installed by a plain `./bootstrap.sh`; optional ones only when named explicitly.
+Basic components are installed by a plain `./bootstrap.sh`; optional ones only when named explicitly. `minimal` installs the first five with the stylish parts turned off (plain tmux theme, no powerline fonts, no iTerm2 setup, no machine-specific git signing or SSH rewrite), which is what you want on a server, in a container or on WSL. The choice is remembered, so a later `./bootstrap.sh tmux` on that machine stays plain until you run `basic` or `all`.
 
 | Component | Tier | Description |
 |-----------|------|-------------|
-| `vim` | basic | Vim editor with plugins |
-| `git` | basic | Git configuration |
-| `tmux` | basic | Tmux with powerline theme |
-| `htop` | basic | Interactive process viewer |
-| `bash` | basic | Bash with git prompt |
+| `vim` | minimal | Vim editor with plugins |
+| `git` | minimal | Git configuration (`~/.gitconfig.local` with signing and SSH rewrite only in the full profile) |
+| `tmux` | minimal | Tmux, powerline theme in the full profile, plain theme in minimal |
+| `htop` | minimal | Interactive process viewer |
+| `bash` | minimal | Bash with git prompt |
 | `nvm` | basic | Node Version Manager |
 | `pyenv` | basic | Python version manager |
 | `pipx` | basic | Python app installer |
@@ -129,7 +133,8 @@ Basic components are installed by a plain `./bootstrap.sh`; optional ones only w
 | `aws` | optional | AWS CLI v2 |
 | `lima` | optional | Lima, Linux virtual machines |
 | `docker` | optional | Docker: colima on macOS, Docker Engine on Ubuntu |
-| `basic` | keyword | The basic components (default) |
+| `minimal` | keyword | The minimal components, stylish parts off |
+| `basic` | keyword | Minimal + the toolchains (default) |
 | `all` | keyword | Basic + optional components |
 
 ## Platform Support

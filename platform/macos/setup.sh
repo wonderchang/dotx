@@ -149,7 +149,12 @@ install_macos() {
     echo "=== Tmux ==="
     install_brew_for tmux tmux
     bash "$PROJECT_ROOT/common/tmux/setup.sh" install
-    bash "$SCRIPT_DIR/iterm2.sh" install
+    if [ "${DOTX_PROFILE:-full}" = "minimal" ]; then
+      echo "✓ iTerm2 setup skipped (minimal profile)"
+      echo ""
+    else
+      bash "$SCRIPT_DIR/iterm2.sh" install
+    fi
   fi
 
   if should_install_component "htop"; then

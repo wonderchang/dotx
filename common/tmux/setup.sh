@@ -27,11 +27,20 @@ install_tmux_setup() {
   echo "Linking tmux configuration..."
   create_symlink "$SCRIPT_DIR/.tmux.conf" "$HOME/.tmux.conf"
   create_symlink "$SCRIPT_DIR/.tmux.conf.local" "$HOME/.tmux.conf.local"
+  # Minimal profile: overlay that turns the powerline theme into the plain
+  # one (sourced after .tmux.conf.local). Full profile: make sure it is gone.
+  if [ "${DOTX_PROFILE:-full}" = "minimal" ]; then
+    create_symlink "$SCRIPT_DIR/.tmux.conf.plain" "$HOME/.tmux.conf.plain"
+  else
+    remove_symlink "$HOME/.tmux.conf.plain"
+  fi
   echo "✓ Tmux configuration linked"
 
-  # Install powerline fonts (key dependency for tmux)
+  # Install powerline fonts (key dependency for the powerline theme)
   echo ""
-  if [ -f "$POWERLINE_MARKER_FONT" ]; then
+  if [ "${DOTX_PROFILE:-full}" = "minimal" ]; then
+    echo "✓ Powerline fonts skipped (minimal profile uses the plain theme)"
+  elif [ -f "$POWERLINE_MARKER_FONT" ]; then
     echo "✓ Powerline fonts already installed"
   elif [ "${DRY_RUN:-false}" = "true" ]; then
     echo "[DRY-RUN] Would install powerline fonts from GitHub"
@@ -53,6 +62,7 @@ uninstall_tmux_setup() {
   # Remove symlinks
   remove_symlink "$HOME/.tmux.conf"
   remove_symlink "$HOME/.tmux.conf.local"
+  remove_symlink "$HOME/.tmux.conf.plain"
 
   # Uninstall powerline fonts
   echo ""

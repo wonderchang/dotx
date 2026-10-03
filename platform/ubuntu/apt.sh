@@ -23,9 +23,14 @@ update_apt() {
 #   curl            - bash (bash-git-prompt), vim (vim-plug), nvm, pyenv, uv, rust
 #   git             - tmux (powerline fonts), vim (plugins), pyenv, nvm
 #   build-essential - rust (cc is the default linker; rustup warns without it),
-#                     pyenv (compiles Pythons), uv/pipx packages with C extensions
+#                     pyenv (compiles Pythons), uv/pipx packages with C extensions;
+#                     only the full profile needs a compiler, the minimal one
+#                     (servers, containers) stays without the 40 packages it brings
 # Like the Xcode Command Line Tools on macOS these are never removed.
-PREREQUISITES=(curl git build-essential)
+PREREQUISITES=(curl git)
+if [ "${DOTX_PROFILE:-full}" != "minimal" ]; then
+  PREREQUISITES+=(build-essential)
+fi
 
 install_prerequisites() {
   echo "=== Base Prerequisites ==="

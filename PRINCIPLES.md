@@ -19,7 +19,10 @@ A fresh machine gets a complete development environment with a single command.
 ./bootstrap.sh vim tmux   # install specific components
 ./bootstrap.sh gcloud     # optional components are installed only when named
 ./bootstrap.sh all        # everything, basic and optional
+./bootstrap.sh minimal    # shell experience only, nothing stylish: servers, containers, WSL
 ```
+
+- The same muscle memory everywhere: `minimal` keeps every key binding, alias and prompt behaviour of the full setup and drops only what needs a patched font, a terminal emulator dotx can configure, or this machine's keys.
 
 - It starts with nothing but what the system ships with. On a fresh Mac that means bash 3.2 and no Homebrew on PATH, and it must still run to completion.
 - Nothing needs to be prepared by hand beforehand. Prerequisites such as Homebrew or package index updates are handled by dotx itself.
@@ -34,6 +37,7 @@ Whatever gets installed can be removed completely with a single command.
 ./bootstrap.sh --uninstall              # uninstall the basic components
 ./bootstrap.sh --uninstall tmux         # uninstall specific components
 ./bootstrap.sh --uninstall all          # uninstall everything, basic and optional
+./bootstrap.sh --uninstall minimal      # uninstall the minimal components
 ```
 
 - Uninstall is the reverse of install: every symlink, package, and setting created during install can be taken back.

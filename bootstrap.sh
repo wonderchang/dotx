@@ -12,8 +12,9 @@
 #
 # Components:
 #   basic ones (vim, git, tmux, htop, bash, nvm, pyenv, pipx, uv, rust) are installed
-#   by default; optional ones (gcloud, aws, lima, docker) only when named. `all` = basic + optional.
-#   See utils/components.sh.
+#   by default; optional ones (gcloud, aws, lima, docker) only when named.
+#   `minimal` = vim git tmux htop bash with the stylish parts turned off,
+#   `all` = basic + optional. See utils/components.sh.
 
 set -eu
 
@@ -43,6 +44,14 @@ main() {
   # Detect platform
   PLATFORM=$(detect_platform)
 
+  # Profile: requested on the command line (`minimal`, or `basic`/`all` for
+  # full), else the one remembered from the last whole-tier install, else
+  # full. Remembered on install, forgotten when a whole tier is uninstalled.
+  DOTX_PROFILE=$(resolve_profile)
+  if [ "$MODE" = "install" ] && [ -n "$(requested_profile)" ]; then
+    save_profile "$DOTX_PROFILE"
+  fi
+
   echo ""
   echo "========================================"
   echo "  Dotfiles Bootstrap"
@@ -53,11 +62,13 @@ main() {
     echo "  Dry Run: ENABLED (no changes will be made)"
   fi
   echo "  Components: $(describe_components)"
+  echo "  Profile: $DOTX_PROFILE"
   echo "========================================"
   echo ""
 
-  # Export DRY_RUN for child scripts
+  # Export DRY_RUN and the profile for child scripts
   export DRY_RUN
+  export DOTX_PROFILE
 
   # Delegate to platform-specific setup
   case "$PLATFORM" in
@@ -73,6 +84,10 @@ main() {
       exit 1
       ;;
   esac
+
+  if [ "$MODE" = "uninstall" ] && [ -n "$(requested_profile)" ]; then
+    clear_profile
+  fi
 }
 
 # ============================================================================
@@ -126,6 +141,10 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "Selection keywords:"
       echo "  basic       The basic components (same as giving none)"
+      echo "  minimal     vim git tmux htop bash only, with the stylish parts off:"
+      echo "              plain tmux theme, no powerline fonts, no iTerm2 setup, no"
+      echo "              machine-specific git signing/credentials. For servers, WSL,"
+      echo "              containers. Remembered until 'basic' or 'all' is run."
       echo "  all         Basic + optional components"
       echo ""
       echo "Examples:"
@@ -134,11 +153,13 @@ while [[ $# -gt 0 ]]; do
       echo "  $0 gcloud                  # Install only gcloud"
       echo "  $0 basic gcloud            # Basic components plus gcloud"
       echo "  $0 all                     # Everything, including optional"
+      echo "  $0 minimal                 # Shell experience only (servers, WSL)"
       echo "  $0 --install vim git       # Install only vim and git"
       echo "  $0 --dry-run --install vim # Preview vim installation"
       echo "  $0 --uninstall vim         # Uninstall only vim"
       echo "  $0 --uninstall             # Uninstall the basic components"
       echo "  $0 --uninstall all         # Uninstall everything, including optional"
+      echo "  $0 --uninstall minimal     # Uninstall the minimal components"
       exit 0
       ;;
     *)

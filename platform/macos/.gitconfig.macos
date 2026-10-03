@@ -1,0 +1,16 @@
+# ~/.gitconfig.local on macOS (full profile): the parts of the git setup
+# that assume this is my own workstation, with its SSH keys and gh.
+[user]
+  signingkey = ~/.ssh/id_ed25519_git.pub
+
+[commit]
+  gpgsign = true
+
+[credential "https://github.com"]
+  helper = !/opt/homebrew/bin/gh auth git-credential
+
+[credential "https://gist.github.com"]
+  helper = !/opt/homebrew/bin/gh auth git-credential
+
+[url "git@github.com:"]
+  insteadOf = https://github.com/
