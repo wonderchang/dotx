@@ -42,7 +42,7 @@ echo "--- stylish and workstation parts absent"
 check "no powerline fonts" bash -c '! ls ~/.local/share/fonts 2>/dev/null | grep -qi powerline'
 for d in ~/.nvm ~/.pyenv ~/.local/bin/uv ~/.cargo ~/.rustup; do check "no $d" gone "$d"; done
 check "pipx not installed by dotx" bash -c '! test -f ~/.local/state/dotx/apt/pipx'
-# build-essential is a base prerequisite of the full profile only
+# build-essential is a dependency of rust and pyenv, neither of which is minimal
 STATE="${DOTX_TEST_STATE:-/tmp/dotx-test}"
 if [ -f "$STATE/pkgs-baseline.txt" ] && ! grep -qx build-essential "$STATE/pkgs-baseline.txt"; then
   check "no build-essential (nothing to compile in minimal)" bash -c '! dpkg-query -W -f="${db:Status-Status}" build-essential 2>/dev/null | grep -qx installed'

@@ -16,13 +16,20 @@ source "$SCRIPT_DIR/apt-common.sh"               # install_apt_package() and fri
 # Component list to install/uninstall
 COMPONENTS=()
 
-# Libraries pyenv needs to build a Python, from
+# What pyenv needs to build a Python, from
 # https://github.com/pyenv/pyenv/wiki#suggested-build-environment (Ubuntu);
-# build-essential, curl and git are base prerequisites (apt.sh). The wiki's
-# libncursesw5-dev is only a transitional name for libncurses-dev on current
-# Ubuntu (APT substitutes it, and the substituted name is what dpkg knows).
-PYENV_BUILD_DEPS=(libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev
-  libncurses-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev)
+# curl and git are base prerequisites (apt.sh). build-essential is shared
+# with rust: the manifests reference-count it, so it stays until the last
+# component that needs it is uninstalled. The wiki's libncursesw5-dev is only
+# a transitional name for libncurses-dev on current Ubuntu (APT substitutes
+# it, and the substituted name is what dpkg knows).
+PYENV_BUILD_DEPS=(build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev
+  libsqlite3-dev libncurses-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev
+  liblzma-dev)
+
+# What rust needs: cc is rustup's default linker (rustup warns without it and
+# cargo cannot link anything).
+RUST_BUILD_DEPS=(build-essential)
 
 # ============================================================================
 # Package Management Helpers
@@ -109,6 +116,9 @@ install_ubuntu() {
   fi
 
   if should_install_component "rust"; then
+    echo "=== Rust Build Dependencies ==="
+    install_apt_packages_for rust "${RUST_BUILD_DEPS[@]}"
+    echo ""
     bash "$PROJECT_ROOT/common/rust/setup.sh" install
     echo ""
   fi
@@ -211,6 +221,8 @@ uninstall_ubuntu() {
 
   if should_install_component "rust"; then
     bash "$PROJECT_ROOT/common/rust/setup.sh" uninstall
+    echo "=== Rust Build Dependencies Uninstall ==="
+    uninstall_apt_packages_for rust
     echo ""
   fi
 

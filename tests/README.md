@@ -24,5 +24,10 @@ or `common/`.
 | `verify-minimal.sh` | `./bootstrap.sh minimal` | the five minimal components, plain tmux theme in effect, no fonts / toolchains / `~/.gitconfig.local`, commits work without a signing key, profile recorded as minimal |
 | `verify-clean.sh` | `./bootstrap.sh --uninstall ...` | everything dotx made is gone, `~/.bashrc` is the original, no package that was on the image is missing |
 
+`tests/unit-apt-common.sh` needs no VM: it drives the reference-counted APT
+state in `platform/ubuntu/apt-common.sh` with fake `dpkg-query`/`sudo`
+(shared dependency kept until its last user goes, pre-existing packages
+never recorded, dry-run writes nothing, old state migrated).
+
 The verify scripts can also be run on their own inside the VM:
 `limactl shell dotx-ubuntu -- bash -lc 'bash ~/dotx/tests/verify-minimal.sh'`.

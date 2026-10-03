@@ -33,7 +33,7 @@ for d in ~/.vim/autoload/plug.vim ~/.vim/plugged ~/.bash-git-prompt ~/.nvm ~/.py
 check "powerline fonts gone" bash -c '! ls ~/.local/share/fonts 2>/dev/null | grep -qi powerline'
 echo "--- packages removed"
 # packages dotx installed itself must be gone; ones that were on the image before dotx must still be there
-for p in vim tmux htop pipx google-cloud-cli docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-buildx-plugin; do
+for p in vim tmux htop pipx build-essential google-cloud-cli docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-buildx-plugin; do
   if [ -f "$STATE/pkgs-baseline.txt" ] && grep -qx "$p" "$STATE/pkgs-baseline.txt"; then
     check "pkg $p kept (pre-existing)" bash -c "dpkg-query -W -f='\${db:Status-Status}' $p 2>/dev/null | grep -qx installed"
   else

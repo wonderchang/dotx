@@ -97,6 +97,23 @@ for script in $CHECKS; do
   run_checks "$script"
 done
 
+if [ "$PROFILE" = "full" ]; then
+  step "Shared dependency: --uninstall rust must keep build-essential for pyenv"
+  if vm "grep -qx build-essential $STATE/pkgs-baseline.txt"; then
+    echo "⚠ build-essential was on the image already; nothing to check"
+  else
+    run_bootstrap uninstall-rust.log --uninstall rust
+    if vm "dpkg-query -W -f='\${db:Status-Status}' build-essential 2>/dev/null | grep -qx installed && grep -qx build-essential ~/.local/state/dotx/apt/pyenv && [ ! -f ~/.local/state/dotx/apt/rust ]"; then
+      echo "✓ build-essential kept (pyenv still lists it), rust manifest gone"
+    else
+      echo "✗ build-essential removed or manifests wrong after --uninstall rust"
+      vm "dpkg-query -W -f='\${db:Status-Status}\n' build-essential; ls ~/.local/state/dotx/apt/; cat ~/.local/state/dotx/apt/pyenv ~/.local/state/dotx/apt/_installed" || true
+      failures=$((failures + 1))
+    fi
+    run_bootstrap install-rust.log rust
+  fi
+fi
+
 step "Re-run install (must be a no-op)"
 run_bootstrap install-again.log "$KEYWORD"
 redo=$(vm "grep -cE '^(Installing|Cloning|Downloading)' $STATE/install-again.log" || true)
