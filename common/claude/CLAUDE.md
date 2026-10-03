@@ -1,7 +1,7 @@
 # Global Instructions
 
 Personal defaults for every project. Project CLAUDE.md files add to these;
-when they conflict, follow the project. The how-to lives in `~/.claude/rules/`.
+when they conflict, follow the project.
 
 ## Language
 
@@ -13,5 +13,9 @@ when they conflict, follow the project. The how-to lives in `~/.claude/rules/`.
 
 ## Safety
 
-- Never run destructive or irreversible actions (force push, `rm -rf`, dropping
-  data, deleting branches, rewriting published history) without asking first.
+- Never run destructive or irreversible actions without asking first, even in
+  auto mode: force push, rewriting published history, deleting branches,
+  dropping data, `rm -rf`, and anything that discards uncommitted work
+  (`git reset --hard`, `git checkout -- <file>`, `git stash drop`).
+- Never print, commit or send credentials, tokens or `.env` contents. Say where
+  they are instead.
