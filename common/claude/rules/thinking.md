@@ -27,6 +27,25 @@ How to work through anything that is not a quick fix. Keep the order.
    first and why; "the workaround now, because the long-term fix needs X we
    do not have yet" is a complete answer.
 
+## Best practice, pinned down in layers
+
+Solving the problem in front of us is not the bar. At step 2 and again at
+step 6, ask what the best practice is for this situation, then make the
+phrase mean something before leaning on it:
+
+- Whose practice: the tool's own docs, the ecosystem's official guidance, a
+  widely used reference project, or this team's conventions. Name the
+  source. "Best practice" with no source is an opinion.
+- For which context: the scale, risk and lifetime of this system. What is
+  right for a regulated product with ten teams is often wrong for a
+  one-person repo, and the other way round.
+- At what cost: what adopting it changes here and what it would take to
+  keep it up.
+
+Where the best practice and the quick fix differ, say so and let me choose.
+Never ship the quick fix labelled as the standard, and never impose the
+standard on a problem that does not have its scale.
+
 ## Standing habits
 
 - Verify over guess. If you cannot verify, say what is unverified and what
