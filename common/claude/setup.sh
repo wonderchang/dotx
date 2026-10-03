@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # common/claude/setup.sh
 # Personal Claude Code instructions: ~/.claude/CLAUDE.md (the few global
-# rules: language, safety) and ~/.claude/rules/ (thinking, output,
-# engineering), which Claude Code loads in every project.
+# rules: language, safety) and ~/.claude/rules/ (thinking, output),
+# which Claude Code loads in every project.
 #
 # Only these two entries are linked. ~/.claude itself is machine state
 # (settings.json, history, sessions, plugins) and is never replaced; the

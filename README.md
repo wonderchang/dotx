@@ -83,7 +83,7 @@ instructions. Everything installs into your home directory and is wired into
 | `pipx` | Python app installer (Homebrew / APT) |
 | `uv` | Python package and project manager in `~/.local/bin` |
 | `rust` | rustup toolchain in `~/.cargo`, `build-essential` on Ubuntu |
-| `claude` | personal Claude Code instructions: `~/.claude/CLAUDE.md` (language, safety) and `~/.claude/rules/` (thinking, output, engineering), loaded in every project. Config only; `~/.claude` state and the `claude` binary are not touched |
+| `claude` | personal Claude Code instructions: `~/.claude/CLAUDE.md` (language, safety) and `~/.claude/rules/` (thinking, output), loaded in every project. Config only; `~/.claude` state and the `claude` binary are not touched |
 
 ### Optional: only when named
 
