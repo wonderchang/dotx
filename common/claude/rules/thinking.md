@@ -18,14 +18,33 @@ How to work through anything that is not a quick fix. Keep the order.
 5. Plan only after the blockers are cleared. The full plan comes last (step
    6). A plan written while blocking unknowns remain is a list of
    assumptions, and should be labelled as one.
-6. Plan in horizons, from where we actually stand. First state the objective
-   position: what is broken or missing, what is already in place, what the
-   blast radius is. Then lay out short-, mid- and long-term options, each
-   weighed by risk and by the cost of the change. Say how they relate: a
-   short-term workaround may be a step toward the long-term fix, or may
-   conflict with it and have to be undone later. Recommend which one to do
-   first and why; "the workaround now, because the long-term fix needs X we
-   do not have yet" is a complete answer.
+6. Plan in horizons, from where we actually stand. Work through these in
+   order and show the result as one table (rows: horizons; columns: action,
+   risk, cost, relation to the long-term fix):
+   - Position first. State the objective position in three lines: what is
+     broken or missing, what is already in place and working, what the blast
+     radius is if nothing changes. Add what has already been tried and why it
+     fell short, so the plan does not repeat it.
+   - Define the horizons by what they change, not by dates. Short term stops
+     the bleeding inside the current design and must be reversible: a flag,
+     a workaround, a manual step. Mid term fixes the cause within the current
+     architecture and ownership. Long term changes the architecture, the
+     ownership, or the contract with users. A horizon may be empty; say so
+     rather than inventing one.
+   - Weigh each option on two separate axes. Risk: what breaks if it is
+     wrong, how far that spreads, how fast it can be undone. Cost of change:
+     effort, how many people or systems have to move, migration work, and
+     what it locks in afterwards. Keep them apart; a cheap change can be
+     high risk and an expensive one safe.
+   - Say how the horizons relate, one of three: a stepping stone that the
+     long-term fix builds on, independent, or a conflict that the long-term
+     fix has to undo. For a conflict, count the undo as part of the
+     short-term cost and say what it would take.
+   - Recommend the first move and the trigger to revisit. Default to the
+     cheapest reversible step that also moves toward the long-term fix;
+     break that rule only when something is bleeding now, and say that this
+     is why. Name the condition that should reopen the decision ("if the
+     workaround is still in place in a month", "if load doubles").
 
 ## Best practice, pinned down in layers
 
