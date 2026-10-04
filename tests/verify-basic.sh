@@ -46,6 +46,8 @@ check "pyenv" test -x ~/.pyenv/bin/pyenv
 check "uv"    test -x ~/.local/bin/uv
 check "uvx"   test -x ~/.local/bin/uvx
 check "rustup" test -x ~/.cargo/bin/rustup
+check "claude" bash -c 'test -x ~/.local/bin/claude && ~/.local/bin/claude --version'
+check "claude installed by dotx (marker)" test -f ~/.local/state/dotx/claude-installed
 check "cargo"  test -x ~/.cargo/bin/cargo
 
 echo "--- fresh login shell loads cleanly and sees the tools"
@@ -64,6 +66,9 @@ check "cut -c3- | bash (apply_configuration)" bash -c 'cut -c3- ~/.tmux.conf | b
 
 echo "--- rust/uv installers did not leave lines in rc files"
 check "no uv env line" bash -c '! grep -q "\.local/bin/env" ~/.bashrc ~/.profile ~/.bash_profile 2>/dev/null'
+echo "--- dry-run uninstall runs to the end (remove_symlink once aborted it under set -e)"
+check "dry-run --uninstall completes" bash -c "cd '$DOTX_DIR' && ./bootstrap.sh --dry-run --uninstall 2>&1 | grep -q 'Uninstall Complete'"
+check "no claude PATH line" bash -c '! grep -il "claude" ~/.profile ~/.bash_profile 2>/dev/null | grep -q .'
 check "no cargo env line" bash -c '! grep -q "\.cargo/env" ~/.profile ~/.bash_profile 2>/dev/null'
 
 echo "RESULT basic: $fail failure(s)"

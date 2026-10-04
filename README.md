@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/wonderchang/dotx/main/install.sh | 
 
 | You are setting up… | Run | You get |
 |---|---|---|
-| **Your own workstation** (Mac or Ubuntu desktop) | `./bootstrap.sh` | the shell experience + Node, Python and Rust toolchains, personal Claude Code instructions, powerline fonts, iTerm2 profile on macOS, GitHub over SSH |
+| **Your own workstation** (Mac or Ubuntu desktop) | `./bootstrap.sh` | the shell experience + Node, Python and Rust toolchains, Claude Code with personal instructions, powerline fonts, iTerm2 profile on macOS, GitHub over SSH |
 | **A server, a container, WSL, a colleague's box** | `./bootstrap.sh minimal` | the shell experience only: vim, git, tmux, htop, bash. Plain tmux theme, no fonts, no toolchains, no signing key, clones stay on HTTPS |
 | **A workstation that also does cloud / VM / container work** | `./bootstrap.sh all` or `./bootstrap.sh basic gcloud docker` | everything above plus gcloud, aws, lima and docker |
 | **Just one tool** | `./bootstrap.sh tmux` | that component only, in whatever profile the machine already has |
@@ -83,7 +83,7 @@ instructions. Everything installs into your home directory and is wired into
 | `pipx` | Python app installer (Homebrew / APT) |
 | `uv` | Python package and project manager in `~/.local/bin` |
 | `rust` | rustup toolchain in `~/.cargo`, `build-essential` on Ubuntu |
-| `claude` | personal Claude Code instructions: `~/.claude/CLAUDE.md` (language, safety) and `~/.claude/rules/` (thinking, output), loaded in every project, plus a `PreToolUse` hook that turns destructive commands (force push, `git reset --hard`, `rm -rf`, `DROP TABLE`, `terraform destroy` …) into a permission prompt even in auto mode. The hook is registered in `settings.json` by merging one entry; the rest of `~/.claude` and the `claude` binary are not touched |
+| `claude` | Claude Code itself (official native installer into `~/.local/share/claude`, self-updating, skipped if already present) plus personal instructions: `~/.claude/CLAUDE.md` (language, safety) and `~/.claude/rules/` (thinking, output), loaded in every project, and a `PreToolUse` hook that turns destructive commands (force push, `git reset --hard`, `rm -rf`, `DROP TABLE`, `terraform destroy` …) into a permission prompt even in auto mode. The hook is registered in `settings.json` by merging one entry; the rest of `~/.claude` is not touched, and a `claude` that was there before dotx is never removed |
 
 ### Optional: only when named
 

@@ -29,7 +29,7 @@ if [ -f "$STATE/pkgs-baseline.txt" ]; then
   echo "      added:   $added"
 fi
 echo "--- tool dirs removed"
-for d in ~/.vim/autoload/plug.vim ~/.vim/plugged ~/.bash-git-prompt ~/.nvm ~/.pyenv ~/.local/bin/uv ~/.local/bin/uvx ~/.cargo ~/.rustup ~/.local/bin/aws ~/.local/bin/aws_completer ~/.local/aws-cli ~/.local/bin/limactl ~/.local/bin/lima ~/.local/lima; do check "gone $d" gone "$d"; done
+for d in ~/.vim/autoload/plug.vim ~/.vim/plugged ~/.bash-git-prompt ~/.nvm ~/.pyenv ~/.local/bin/uv ~/.local/bin/uvx ~/.cargo ~/.rustup ~/.local/bin/aws ~/.local/bin/aws_completer ~/.local/aws-cli ~/.local/bin/limactl ~/.local/bin/lima ~/.local/lima ~/.local/bin/claude ~/.local/share/claude ~/.local/state/dotx/claude-installed; do check "gone $d" gone "$d"; done
 check "powerline fonts gone" bash -c '! ls ~/.local/share/fonts 2>/dev/null | grep -qi powerline'
 echo "--- packages removed"
 # packages dotx installed itself must be gone; ones that were on the image before dotx must still be there

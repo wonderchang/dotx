@@ -134,7 +134,7 @@ while [[ $# -gt 0 ]]; do
       echo "  pipx        Python application installer"
       echo "  uv          Python package and project manager"
       echo "  rust        Rust programming language (via rustup)"
-      echo "  claude      Claude Code personal instructions (~/.claude/CLAUDE.md, rules/)"
+      echo "  claude      Claude Code (native installer) + personal instructions and safety hook"
       echo ""
       echo "Optional components (only when named explicitly):"
       echo "  gcloud      Google Cloud CLI (gcloud, gsutil, bq)"
