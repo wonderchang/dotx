@@ -20,12 +20,17 @@
 # ~/.local/state/dotx/claude-installed says dotx put it there. Skills and
 # output styles can be added later as further symlinks.
 #
-# A session started with CLAUDE_CONFIG_DIR=<dir> reads <dir>/CLAUDE.md and
-# <dir>/rules instead (verified: it does not fall back to ~/.claude), so the
-# same links go into every such directory that already exists. ~/.claude-work
-# is the one dotx's own .bashrc uses (`claude-work` alias); more can be given
-# in DOTX_CLAUDE_CONFIG_DIRS (colon-separated). None of them is created here
-# except ~/.claude.
+# Two logins, one person: ~/.claude is the personal account, ~/.claude-work
+# the company one (`claude-work` alias in common/bash/.bashrc sets
+# CLAUDE_CONFIG_DIR). Most work, personal projects included, happens in the
+# company one, so both get identical instructions on purpose. A session
+# reads <config dir>/CLAUDE.md and <config dir>/rules and does not fall back
+# to ~/.claude (verified), so both directories get the same links and hook
+# registration, and both are created here (empty) so that a fresh machine is
+# ready for either login. Memory, history, credentials and settings stay
+# separate per directory and dotx never touches those; leaving the company is
+# `rm -rf ~/.claude-work` (after moving memory worth keeping to ~/.claude). More directories can be given in DOTX_CLAUDE_CONFIG_DIRS
+# (colon-separated); those are used only when they already exist.
 
 set -eu
 
@@ -34,14 +39,26 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 source "$PROJECT_ROOT/utils/symlink.sh"
 
-# ~/.claude always; the others only when they exist
+# The two account directories always; extra ones only when they exist
+CLAUDE_ACCOUNT_DIRS=("$HOME/.claude" "$HOME/.claude-work")
+
 claude_config_dirs() {
   local dir
-  echo "$HOME/.claude"
-  for dir in "$HOME/.claude-work" ${DOTX_CLAUDE_CONFIG_DIRS:+${DOTX_CLAUDE_CONFIG_DIRS//:/ }}; do
-    [ "$dir" != "$HOME/.claude" ] && [ -d "$dir" ] && echo "$dir"
+  printf '%s\n' "${CLAUDE_ACCOUNT_DIRS[@]}"
+  for dir in ${DOTX_CLAUDE_CONFIG_DIRS:+${DOTX_CLAUDE_CONFIG_DIRS//:/ }}; do
+    case " ${CLAUDE_ACCOUNT_DIRS[*]} " in *" $dir "*) continue ;; esac
+    [ -d "$dir" ] && echo "$dir"
   done
   return 0
+}
+
+ensure_dir() {  # ensure_dir <path>: mkdir -p with dry-run message
+  [ -d "$1" ] && return 0
+  if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "  [DRY-RUN] Would create $1"
+  else
+    mkdir -p "$1"
+  fi
 }
 
 # claude_settings_hook add|remove <settings.json> <hook command>
@@ -56,9 +73,12 @@ if os.path.exists(path):
         settings = json.load(f)
 pre = settings.setdefault("hooks", {}).setdefault("PreToolUse", [])
 mine = [e for e in pre if any(h.get("command") == command for h in e.get("hooks", []))]
-if action == "add":
+if action in ("add", "check"):
     if mine:
         print("  ✓ Hook already registered in " + path)
+        sys.exit(0)
+    if action == "check":
+        print("  [DRY-RUN] Would register " + command + " as a PreToolUse hook in " + path)
         sys.exit(0)
     pre.append({"matcher": "Bash", "hooks": [{"type": "command", "command": command, "timeout": 10}]})
     print("  Registered PreToolUse hook in " + path)
@@ -86,16 +106,12 @@ PY
 
 install_hook_in() {  # install_hook_in <config dir>
   local dir="$1" hook="$1/hooks/guard-destructive.sh"
-  if [ "${DRY_RUN:-false}" = "true" ]; then
-    [ -d "$dir/hooks" ] || echo "  [DRY-RUN] Would create $dir/hooks"
-  else
-    mkdir -p "$dir/hooks"
-  fi
+  ensure_dir "$dir/hooks"
   create_symlink "$SCRIPT_DIR/hooks/guard-destructive.sh" "$hook"
   if ! command -v python3 >/dev/null 2>&1; then
     echo "  Warning: python3 not found, hook not registered in $dir/settings.json"
   elif [ "${DRY_RUN:-false}" = "true" ]; then
-    echo "  [DRY-RUN] Would register $hook as a PreToolUse hook in $dir/settings.json"
+    claude_settings_hook check "$dir/settings.json" "$hook"
   else
     claude_settings_hook add "$dir/settings.json" "$hook"
   fi
@@ -161,14 +177,9 @@ install_claude_setup() {
   install_claude_binary
   echo ""
 
-  if [ ! -d "$HOME/.claude" ]; then
-    if [ "${DRY_RUN:-false}" = "true" ]; then
-      echo "  [DRY-RUN] Would create $HOME/.claude"
-    else
-      mkdir -p "$HOME/.claude"
-    fi
-  fi
-
+  for dir in "${CLAUDE_ACCOUNT_DIRS[@]}"; do
+    ensure_dir "$dir"
+  done
   for dir in $(claude_config_dirs); do
     echo "Linking Claude Code instructions into $dir..."
     create_symlink "$SCRIPT_DIR/CLAUDE.md" "$dir/CLAUDE.md"
@@ -189,9 +200,12 @@ uninstall_claude_setup() {
     remove_symlink "$dir/CLAUDE.md"
   done
   uninstall_claude_binary
-  # Only an empty ~/.claude goes (the one install created on a fresh machine)
+  # An account directory goes only if it is empty (the ones install created
+  # on a fresh machine); one with memory, history or settings in it stays
   if [ "${DRY_RUN:-false}" != "true" ]; then
-    rmdir "$HOME/.claude" 2>/dev/null || true
+    for dir in "${CLAUDE_ACCOUNT_DIRS[@]}"; do
+      rmdir "$dir" 2>/dev/null || true
+    done
   fi
   echo ""
 }

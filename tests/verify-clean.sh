@@ -10,12 +10,17 @@ check() { local label="$1"; shift; if "$@" >/dev/null 2>&1; then echo "PASS  $la
 gone() { [ ! -e "$1" ] && [ ! -L "$1" ]; }
 
 echo "--- symlinks removed"
-for f in ~/.vimrc ~/.gitconfig ~/.gitconfig.local ~/.tmux.conf ~/.tmux.conf.local ~/.tmux.conf.plain ~/.bash_profile ~/.bashrc.local ~/.claude/CLAUDE.md ~/.claude/rules ~/.claude/hooks ~/.claude/settings.json; do check "gone $f" gone "$f"; done
+for f in ~/.vimrc ~/.gitconfig ~/.gitconfig.local ~/.tmux.conf ~/.tmux.conf.local ~/.tmux.conf.plain ~/.bash_profile ~/.bashrc.local ~/.claude/CLAUDE.md ~/.claude/rules ~/.claude/hooks ~/.claude/settings.json ~/.claude-work/CLAUDE.md ~/.claude-work/rules ~/.claude-work/hooks ~/.claude-work/settings.json; do check "gone $f" gone "$f"; done
 if [ -f "$STATE/bashrc.orig" ]; then
   check ".bashrc restored to the pre-dotx original" bash -c "[ -f ~/.bashrc ] && [ ! -L ~/.bashrc ] && cmp -s ~/.bashrc '$STATE/bashrc.orig'"
 else
   check ".bashrc is a regular file again (no original saved to compare)" bash -c '[ -f ~/.bashrc ] && [ ! -L ~/.bashrc ]'
 fi
+# The account directories themselves may stay: running `claude --version`
+# during the checks makes Claude Code create backups/, downloads/ and
+# sessions/ in ~/.claude, and dotx removes an account directory only when
+# it is empty. What must not remain is anything dotx linked or wrote.
+check "no dotx entries left in ~/.claude or ~/.claude-work" bash -c '! ls -A ~/.claude ~/.claude-work 2>/dev/null | grep -qE "^(CLAUDE\.md|rules|hooks|settings\.json)$"'
 check "no leftover backups" bash -c '! ls -a ~ | grep -q "\.backup\."'
 echo "--- APT packages added or removed vs the pre-dotx baseline (expect: only base prerequisites and their deps added, nothing removed)"
 if [ -f "$STATE/pkgs-baseline.txt" ]; then
