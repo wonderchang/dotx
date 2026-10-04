@@ -70,7 +70,11 @@ remove_symlink() {
     backup=$(latest_backup "$target")
     if [ "${DRY_RUN:-false}" = "true" ]; then
       echo "  [DRY-RUN] Would remove symlink: $target"
-      [ -n "$backup" ] && echo "  [DRY-RUN] Would restore original: $target ← $backup"
+      # Not `[ -n ] && echo`: with no backup that returns 1 and, under the
+      # callers' `set -e`, ended the whole dry-run after the first symlink
+      if [ -n "$backup" ]; then
+        echo "  [DRY-RUN] Would restore original: $target ← $backup"
+      fi
     else
       rm -f "$target"
       echo "  Removed symlink: $target"
