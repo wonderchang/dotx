@@ -48,18 +48,40 @@ RULES = [
     ("overwrite disk",             r"(^|[\s;&|])(dd\s+if=|mkfs(\.\w+)?\s)"),
 ]
 
+# Report what matched and where, not just the category: the command may be
+# a long heredoc in which one line is the problem, and the person at the
+# prompt has to be able to spot it without reading the whole thing.
+lines = cmd.split("\n")
+hits = []
 for label, pattern in RULES:
-    if re.search(pattern, cmd):
-        print(json.dumps({
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "ask",
-                "permissionDecisionReason":
-                    f"dotx safety hook: {label}. This command is destructive or discards work; "
-                    f"confirm with the user before running it.",
-            }
-        }))
+    m = re.search(pattern, cmd)
+    if not m:
+        continue
+    # Some patterns consume the separator before the command (which may be
+    # the newline), so step past leading whitespace before locating it
+    pos = m.start()
+    while pos < len(cmd) and cmd[pos].isspace():
+        pos += 1
+    lineno = cmd.count("\n", 0, pos) + 1
+    line = lines[lineno - 1].strip()
+    if len(line) > 90:
+        col = pos - (cmd.rfind("\n", 0, pos) + 1) - (len(lines[lineno - 1]) - len(lines[lineno - 1].lstrip()))
+        lo = max(0, col - 30)
+        line = ("…" if lo else "") + line[lo:lo + 90] + ("…" if lo + 90 < len(line) else "")
+    where = f"line {lineno} of {len(lines)}" if len(lines) > 1 else "the command"
+    hits.append(f"{label} at {where}: {line}")
+    if len(hits) == 3:
         break
+
+if hits:
+    reason = "dotx safety hook flagged " + "; ".join(hits) + ". Destructive or discards work: confirm with the user first."
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "ask",
+            "permissionDecisionReason": reason,
+        }
+    }))
 sys.exit(0)
 PY
 

@@ -73,6 +73,12 @@ expect pass 'npm test'
 expect pass 'ls -la ~/.claude'
 expect pass 'dropdb-is-not-here'
 
+echo "--- the reason names the match and the line"
+reason=$(python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command":sys.argv[1]}}))' $'cd /tmp && cat > x.sh <<EOF\necho hello\nrm -rf "$HOME/.cache/x"\nEOF\nbash x.sh' | bash "$HOOK" | python3 -c 'import json,sys; print(json.load(sys.stdin)["hookSpecificOutput"]["permissionDecisionReason"])')
+if grep -q 'recursive rm at line 3 of 5: rm -rf "$HOME/.cache/x"' <<< "$reason"; then echo "PASS  reason quotes the line"; else echo "FAIL  reason: $reason"; fail=$((fail+1)); fi
+reason=$(run_hook_reason() { python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command":sys.argv[1]}}))' "$1" | bash "$HOOK" | python3 -c 'import json,sys; print(json.load(sys.stdin)["hookSpecificOutput"]["permissionDecisionReason"])'; }; run_hook_reason 'git push --force && git branch -D old')
+if grep -q 'force push at the command: git push --force && git branch -D old; delete branch at the command' <<< "$reason"; then echo "PASS  several rules listed"; else echo "FAIL  reason: $reason"; fail=$((fail+1)); fi
+
 echo "--- other tools and bad input pass through"
 got=$(run_hook Edit 'rm -rf /'); if [ "$got" = pass ]; then echo "PASS  Edit tool ignored"; else echo "FAIL  Edit tool: $got"; fail=$((fail+1)); fi
 got=$(echo 'not json' | bash "$HOOK"); if [ -z "$got" ]; then echo "PASS  invalid JSON passes"; else echo "FAIL  invalid JSON: $got"; fail=$((fail+1)); fi
