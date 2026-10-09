@@ -76,11 +76,17 @@ alias grep='grep --color=auto'
 alias h='history | grep'
 alias mkdir='mkdir -pv'
 alias ls='ls -G'
-alias mv='mv -i'
 alias path='echo -e ${PATH//:/\\n}'
-alias rm='_rm'
 alias rrm='/bin/rm -i'
 alias less='less -R'
+
+# Not inside Claude Code: its shell snapshot drops functions named `_*`, so
+# `rm` would point at a missing `_rm`, and `mv -i` silently refuses to
+# overwrite without a tty. The guard-destructive hook covers rm there.
+if [ -z "${CLAUDECODE:-}" ]; then
+  alias mv='mv -i'
+  alias rm='_rm'
+fi
 
 # ============================================================================
 # Bash Git Prompt
