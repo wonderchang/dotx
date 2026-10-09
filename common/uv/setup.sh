@@ -7,6 +7,8 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+source "$PROJECT_ROOT/utils/marker.sh"
+
 # Remove auto-added env line from a shell config file
 # Args: $1 = file path (e.g., ~/.bashrc)
 cleanup_env_line() {
@@ -43,6 +45,13 @@ install_uv_setup() {
   else
     echo "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # A failed download pipes nothing into sh, so check the result
+    if [ ! -x "$HOME/.local/bin/uv" ]; then
+      echo "✗ uv installation failed: ~/.local/bin/uv missing"
+      exit 1
+    fi
+    mark_installed uv
     echo "✓ uv installed"
 
     # Remove the line that uv installer automatically adds to shell configs
@@ -64,6 +73,13 @@ uninstall_uv_setup() {
   # Check if any uv files exist (don't rely on PATH)
   if [ ! -f "$HOME/.local/bin/uv" ] && [ ! -f "$HOME/.local/bin/uvx" ] && [ ! -f "$HOME/.local/bin/env" ]; then
     echo "✓ uv not installed"
+    return 0
+  fi
+
+  # Only remove a uv that dotx installed
+  if ! is_marked_installed uv; then
+    echo "  Note: uv was installed before dotx; kept (remove with: rm -f ~/.local/bin/uv ~/.local/bin/uvx)"
+    echo ""
     return 0
   fi
 
@@ -96,6 +112,7 @@ uninstall_uv_setup() {
       echo "  Removed uv env file: ~/.local/bin/env"
     fi
   fi
+  [ "${DRY_RUN:-false}" = "true" ] || unmark_installed uv
   echo ""
 }
 

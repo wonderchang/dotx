@@ -7,6 +7,8 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+source "$PROJECT_ROOT/utils/marker.sh"
+
 PYENV_ROOT="$HOME/.pyenv"
 
 install_pyenv_setup() {
@@ -24,6 +26,12 @@ install_pyenv_setup() {
       # Install pyenv using pyenv-installer (official method)
       curl -fsSL https://pyenv.run | bash
 
+      # A failed download pipes nothing into bash, so check the result
+      if [ ! -x "$PYENV_ROOT/bin/pyenv" ]; then
+        echo "✗ pyenv installation failed: $PYENV_ROOT/bin/pyenv missing"
+        exit 1
+      fi
+      mark_installed pyenv
       echo "✓ pyenv installed"
     fi
   fi
@@ -34,12 +42,15 @@ install_pyenv_setup() {
 uninstall_pyenv_setup() {
   echo "=== pyenv Uninstall ==="
 
-  # Remove pyenv directory
-  if [ -d "$PYENV_ROOT" ]; then
+  # Remove pyenv (and every Python version in it) only when dotx installed it
+  if [ -d "$PYENV_ROOT" ] && ! is_marked_installed pyenv; then
+    echo "  Note: pyenv was installed before dotx; kept (remove with: rm -rf ~/.pyenv)"
+  elif [ -d "$PYENV_ROOT" ]; then
     if [ "${DRY_RUN:-false}" = "true" ]; then
       echo "  [DRY-RUN] Would remove pyenv directory: $PYENV_ROOT"
     else
       rm -rf "$PYENV_ROOT"
+      unmark_installed pyenv
       echo "  Removed pyenv directory: $PYENV_ROOT"
     fi
   else

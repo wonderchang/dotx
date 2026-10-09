@@ -7,6 +7,8 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+source "$PROJECT_ROOT/utils/marker.sh"
+
 # Remove auto-added cargo env line from a shell config file
 # Args: $1 = file path (e.g., ~/.bashrc)
 cleanup_cargo_env_line() {
@@ -43,6 +45,13 @@ install_rust_setup() {
   else
     echo "Installing Rust via rustup..."
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    # A failed download pipes nothing into sh, so check the result
+    if [ ! -x "$HOME/.cargo/bin/rustup" ]; then
+      echo "✗ Rust installation failed: ~/.cargo/bin/rustup missing"
+      exit 1
+    fi
+    mark_installed rust
     echo "✓ Rust installed"
 
     # Remove the line that rustup installer automatically adds to shell configs
@@ -67,12 +76,20 @@ uninstall_rust_setup() {
     return 0
   fi
 
+  # Only remove a Rust toolchain that dotx installed
+  if ! is_marked_installed rust; then
+    echo "  Note: Rust was installed before dotx; kept (remove with: rustup self uninstall)"
+    echo ""
+    return 0
+  fi
+
   # Uninstall via rustup
   if [ "${DRY_RUN:-false}" = "true" ]; then
     echo "  [DRY-RUN] Would run: rustup self uninstall -y"
   else
     echo "Uninstalling Rust via rustup..."
     "$HOME/.cargo/bin/rustup" self uninstall -y
+    unmark_installed rust
     echo "✓ Rust uninstalled"
   fi
   echo ""

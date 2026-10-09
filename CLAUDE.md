@@ -70,6 +70,7 @@ dotx/
     ├── shell.sh                    # Shell switching
     ├── components.sh               # Minimal/basic/optional tiers, selection, profile
     ├── sudo.sh                     # One-time password prompt + sudo keepalive
+    ├── marker.sh                   # "dotx installed this" markers (nvm, pyenv, uv, rust)
     └── symlink.sh                  # Symlink management
 ```
 
@@ -156,6 +157,10 @@ fi
 - `remove_symlink()` - Removes symlinks and restores the newest `<target>.backup.*` made by `create_symlink()` (verified in a Lima Ubuntu VM: the stock `~/.bashrc` comes back after `--uninstall`)
 - **Idempotent** - Checks if symlink already correct before doing work
 - **Dry-run aware** - Previews changes without applying
+
+### Ownership Markers
+
+`nvm`, `pyenv`, `uv` and `rust` live in the home directory, so there is no package manager state to tell whether dotx put them there. `utils/marker.sh` keeps one marker per tool, `~/.local/state/dotx/<tool>-installed`, written only after dotx's own installer run succeeded (the result is checked, since a failed `curl | bash` exits 0). Uninstall deletes the tool (`~/.nvm` with every Node version, `~/.pyenv` with every Python build, `rustup self uninstall`, the uv binaries) only when the marker is there; a toolchain that was on the machine before dotx is kept with a note. `claude` follows the same rule with its own `claude-installed` marker. Machines set up before the markers existed have none: `touch` the marker to hand an existing tool to dotx, the same way the Homebrew/APT manifests are seeded.
 
 ## What Gets Installed
 

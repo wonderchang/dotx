@@ -52,6 +52,9 @@ check "rustup" test -x ~/.cargo/bin/rustup
 check "claude" bash -c 'test -x ~/.local/bin/claude && ~/.local/bin/claude --version'
 check "claude installed by dotx (marker)" test -f ~/.local/state/dotx/claude-installed
 check "cargo"  test -x ~/.cargo/bin/cargo
+for t in nvm pyenv uv rust; do
+  check "$t installed by dotx (marker)" test -f ~/.local/state/dotx/$t-installed
+done
 
 echo "--- fresh login shell loads cleanly and sees the tools"
 out=$(env -i HOME=$HOME TERM=xterm USER=$USER bash -lc 'type nvm pyenv uv cargo >/dev/null && echo OK' 2>&1)
