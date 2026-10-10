@@ -31,6 +31,15 @@
 # separate per directory and dotx never touches those; leaving the company is
 # `rm -rf ~/.claude-work` (after moving memory worth keeping to ~/.claude). More directories can be given in DOTX_CLAUDE_CONFIG_DIRS
 # (colon-separated); those are used only when they already exist.
+#
+# The hub (~/ccrc by default) is the per-machine Remote Control hub: a
+# session started there is the controller that starts and lists the work
+# sessions on this host. A machine can put it elsewhere with DOTX_CCRC_DIR;
+# the choice is remembered in ~/.local/state/dotx/ccrc-dir so later runs and
+# uninstall find it, and a changed choice moves the link. Only
+# <hub>/CLAUDE.md is linked (same on every machine); the machine's repo
+# list, <hub>/repos.md, is the user's and is never touched, and the hub is
+# removed on uninstall only if nothing else is left in it.
 
 set -eu
 
@@ -41,6 +50,10 @@ source "$PROJECT_ROOT/utils/symlink.sh"
 
 # The two account directories always; extra ones only when they exist
 CLAUDE_ACCOUNT_DIRS=("$HOME/.claude" "$HOME/.claude-work")
+CCRC_STATE="$HOME/.local/state/dotx/ccrc-dir"
+CCRC_STORED="$(cat "$CCRC_STATE" 2>/dev/null || true)"
+CCRC_DIR="${DOTX_CCRC_DIR:-${CCRC_STORED:-$HOME/ccrc}}"
+CCRC_DIR="${CCRC_DIR%/}"
 
 claude_config_dirs() {
   local dir
@@ -130,6 +143,11 @@ uninstall_hook_from() {  # uninstall_hook_from <config dir>
   [ "${DRY_RUN:-false}" = "true" ] || rmdir "$dir/hooks" 2>/dev/null || true
 }
 
+remove_ccrc() {  # remove_ccrc <hub dir>: unlink CLAUDE.md, drop the dir if empty
+  remove_symlink "$1/CLAUDE.md"
+  [ "${DRY_RUN:-false}" = "true" ] || rmdir "$1" 2>/dev/null || true
+}
+
 CLAUDE_INSTALLED_MARKER="$HOME/.local/state/dotx/claude-installed"
 
 install_claude_binary() {
@@ -187,6 +205,17 @@ install_claude_setup() {
     install_hook_in "$dir"
   done
   echo "✓ Claude Code instructions and safety hook linked"
+
+  echo "Linking the Remote Control hub instructions into $CCRC_DIR..."
+  if [ -n "$CCRC_STORED" ] && [ "$CCRC_STORED" != "$CCRC_DIR" ]; then
+    remove_ccrc "$CCRC_STORED"
+  fi
+  ensure_dir "$CCRC_DIR"
+  create_symlink "$SCRIPT_DIR/ccrc/CLAUDE.md" "$CCRC_DIR/CLAUDE.md"
+  if [ "${DRY_RUN:-false}" != "true" ]; then
+    mkdir -p "$(dirname "$CCRC_STATE")"
+    echo "$CCRC_DIR" > "$CCRC_STATE"
+  fi
   echo ""
 }
 
@@ -194,6 +223,8 @@ uninstall_claude_setup() {
   local dir
   echo "=== Claude Code Uninstall ==="
 
+  remove_ccrc "$CCRC_DIR"
+  [ "${DRY_RUN:-false}" = "true" ] || rm -f "$CCRC_STATE"
   for dir in $(claude_config_dirs); do
     uninstall_hook_from "$dir"
     remove_symlink "$dir/rules"

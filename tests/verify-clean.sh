@@ -10,7 +10,7 @@ check() { local label="$1"; shift; if "$@" >/dev/null 2>&1; then echo "PASS  $la
 gone() { [ ! -e "$1" ] && [ ! -L "$1" ]; }
 
 echo "--- symlinks removed"
-for f in ~/.vimrc ~/.gitconfig ~/.gitconfig.local ~/.tmux.conf ~/.tmux.conf.local ~/.tmux.conf.plain ~/.bash_profile ~/.bashrc.local ~/.claude/CLAUDE.md ~/.claude/rules ~/.claude/hooks ~/.claude/settings.json ~/.claude-work/CLAUDE.md ~/.claude-work/rules ~/.claude-work/hooks ~/.claude-work/settings.json; do check "gone $f" gone "$f"; done
+for f in ~/.vimrc ~/.gitconfig ~/.gitconfig.local ~/.tmux.conf ~/.tmux.conf.local ~/.tmux.conf.plain ~/.bash_profile ~/.bashrc.local ~/.claude/CLAUDE.md ~/.claude/rules ~/.claude/hooks ~/.claude/settings.json ~/.claude-work/CLAUDE.md ~/.claude-work/rules ~/.claude-work/hooks ~/.claude-work/settings.json ~/ccrc/CLAUDE.md ~/ccrc; do check "gone $f" gone "$f"; done
 if [ -f "$STATE/bashrc.orig" ]; then
   check ".bashrc restored to the pre-dotx original" bash -c "[ -f ~/.bashrc ] && [ ! -L ~/.bashrc ] && cmp -s ~/.bashrc '$STATE/bashrc.orig'"
 else
@@ -34,7 +34,7 @@ if [ -f "$STATE/pkgs-baseline.txt" ]; then
   echo "      added:   $added"
 fi
 echo "--- tool dirs removed"
-for d in ~/.vim/autoload/plug.vim ~/.vim/plugged ~/.bash-git-prompt ~/.nvm ~/.pyenv ~/.local/bin/uv ~/.local/bin/uvx ~/.cargo ~/.rustup ~/.local/bin/aws ~/.local/bin/aws_completer ~/.local/aws-cli ~/.local/bin/limactl ~/.local/bin/lima ~/.local/lima ~/.local/bin/claude ~/.local/share/claude ~/.local/state/dotx/claude-installed ~/.local/state/dotx/nvm-installed ~/.local/state/dotx/pyenv-installed ~/.local/state/dotx/uv-installed ~/.local/state/dotx/rust-installed; do check "gone $d" gone "$d"; done
+for d in ~/.vim/autoload/plug.vim ~/.vim/plugged ~/.bash-git-prompt ~/.nvm ~/.pyenv ~/.local/bin/uv ~/.local/bin/uvx ~/.cargo ~/.rustup ~/.local/bin/aws ~/.local/bin/aws_completer ~/.local/aws-cli ~/.local/bin/limactl ~/.local/bin/lima ~/.local/lima ~/.local/bin/claude ~/.local/share/claude ~/.local/state/dotx/claude-installed ~/.local/state/dotx/ccrc-dir ~/.local/state/dotx/nvm-installed ~/.local/state/dotx/pyenv-installed ~/.local/state/dotx/uv-installed ~/.local/state/dotx/rust-installed; do check "gone $d" gone "$d"; done
 check "powerline fonts gone" bash -c '! ls ~/.local/share/fonts 2>/dev/null | grep -qi powerline'
 echo "--- packages removed"
 # packages dotx installed itself must be gone; ones that were on the image before dotx must still be there
