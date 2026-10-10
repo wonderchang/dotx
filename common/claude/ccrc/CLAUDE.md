@@ -151,6 +151,10 @@ that name is running (`tmux list-windows -t "$where" -F '#W'`, or
 `tmux has-session -t "$win"`). Starting twice creates a second, duplicate
 remote session.
 
+Permission prompts of a session in a detached tmux window can be approved
+from the app, including the "ask" from the dotx guard hook (verified). A
+session waiting for approval does not need its tmux window opened.
+
 See what runs: `tmux list-windows` / `tmux ls` for the processes on this
 host, `ListAgents` for the sessions on every host (this one included only
 when it is connected to Remote Control).
@@ -171,10 +175,3 @@ Lima VM names (`LIMA_INSTANCE` in dotx), and shared remote environments
 (a Kubernetes namespace, a test endpoint). Before starting a second session
 in a repo that runs services or tests, check that repo's CLAUDE.md for how it
 avoids those clashes, and tell the user if it says nothing.
-
-## Not verified yet
-
-Check these the first time they matter and update this file:
-
-- Whether a session started inside detached tmux can have its permission
-  prompts approved from the app.
