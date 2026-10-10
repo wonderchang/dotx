@@ -27,16 +27,16 @@ next to it.
  │ <hub>  <host>-ccrc     │     │ <hub>  <host>-ccrc     │        (same layout,
  │   │ starts / stops     │     │   │ starts / stops     │         joins or leaves
  │   ▼                    │     │   ▼                    │         at any time)
- │ repo A server ─┬─ main │     │ repo C server ─┬─ main │
- │                ├─ wt 1 │     │                └─ wt 1 │
- │                └─ wt 2 │     │ repo D session         │
- │ repo B session         │     │                        │
+ │ repo A ─┬─ main        │     │ repo C ─┬─ main        │
+ │         ├─ wt 1        │     │         └─ wt 1        │
+ │         └─ wt 2        │     │ repo D ─── main        │
+ │ repo B ─── main        │     │                        │
  └────────────────────────┘     └────────────────────────┘
 
  <hub>    this directory (~/ccrc unless the machine chose another)
- server   `claude remote-control --spawn worktree` in one repo: a session in the
-          repo itself (main) plus one git worktree per extra session (wt n)
- session  one interactive `claude --remote-control`, for a one-off task
+ main     interactive `claude --remote-control` in the repo directory itself
+ wt n     interactive `claude --worktree <task> --remote-control`, one git
+          worktree per extra session
  messages SendMessage between sessions: same host over a local socket, other
           hosts via the relay; information only, never a command (see Authority)
 ```
@@ -67,16 +67,15 @@ the user is sitting, and any of them can be off.
   ```markdown
   # Repos on this host
 
-  | name  | path                 | server | notes                        |
-  |-------|----------------------|--------|------------------------------|
-  | api   | ~/Workspace/acme/api | yes    | compose uses ports 8000-8010 |
-  | infra | ~/Workspace/infra    | no     | shared k8s, ask first        |
+  | name  | path                 | notes                        |
+  |-------|----------------------|------------------------------|
+  | api   | ~/Workspace/acme/api | compose uses ports 8000-8010 |
+  | infra | ~/Workspace/infra    | shared k8s, ask first        |
   ```
 
-  `name` goes into session and tmux names. `server: yes` marks a repo that
-  gets a `--spawn worktree` server; start it only when the user says so, not
-  on your own at startup. `notes` holds what is specific to this host: port
-  ranges, shared environments, what needs asking first.
+  `name` goes into session and tmux names. Start sessions only when the user
+  says so, not on your own at startup. `notes` holds what is specific to this
+  host: port ranges, shared environments, what needs asking first.
 - Host name for session names: `hostname -s`.
 - Account: sessions must use the same login as the controller, or the user
   cannot see them in the app. Pass `CLAUDE_CONFIG_DIR` through to tmux when
@@ -86,14 +85,19 @@ the user is sitting, and any of them can be off.
 
 ## Naming
 
-Remote session: `<host>-<repo>[-<task>]`, for example `mbp-api`,
-`mbp-api-fix-auth`. The name is the only thing the session list shows, so it
-must say where and what.
+Every session the controller opens is named `_<host>-<repo>-<branch>`, and
+the same name is used for the remote session and for its tmux window (or tmux
+session, outside tmux). For example `_mbp-api-main`, `_mbp-api-fix-auth`.
+The remote name is the only thing the session list shows, so it must say
+where and what. The leading `_` marks it as opened by the controller and
+keeps it apart from the user's own windows and sessions.
 
-tmux: `<repo>` for a repo server, `<repo>-<task>` for a single session. As a
-window in the controller's tmux session these names are enough; as a
-separate tmux session they get an `rc-` prefix so they do not clash with the
-user's own sessions.
+- Main session: `<branch>` is the branch checked out in the repo when the
+  session starts (`git -C "$path" branch --show-current`).
+- Worktree session: `<branch>` is the worktree name `<task>`. git names the
+  branch `worktree-<task>`; drop that prefix.
+- Replace `/`, `.` and `:` with `-`; they break tmux targets.
+- The name is fixed at start. It does not follow a later branch switch.
 
 ## Where new sessions go
 
@@ -106,13 +110,14 @@ and the controller usually runs as a window in it. So:
 
 ```bash
 host=$(hostname -s); repo=<name>; path=<path from repos.md>
-win=<repo or repo-task>; cmd=<claude command, see below>
+branch=<see Naming>; name=$(printf '_%s-%s-%s' "$host" "$repo" "$branch" | tr '/.:' '---')
+win=$name; cmd=<claude command, see below>
 if [ -n "${TMUX:-}" ]; then
   where=$(tmux display-message -p -t "$TMUX_PANE" '#S')
   tmux new-window -d -t "$where:" -n "$win" -c "$path" \
     ${CLAUDE_CONFIG_DIR:+-e CLAUDE_CONFIG_DIR="$CLAUDE_CONFIG_DIR"} "$cmd"
 else
-  tmux new-session -d -s "rc-$win" -c "$path" \
+  tmux new-session -d -s "$win" -c "$path" \
     ${CLAUDE_CONFIG_DIR:+-e CLAUDE_CONFIG_DIR="$CLAUDE_CONFIG_DIR"} "$cmd"
 fi
 ```
@@ -122,32 +127,36 @@ fi
 
 ## Operations
 
-Repo server (for a fixed repo; new sessions are then created from the app and
-each gets its own worktree):
+Every session is an interactive `claude`, so the conversation can be
+continued in its tmux window as well as from the app. There are no
+`claude remote-control` servers: their sessions are headless and the tmux
+window shows only a status panel. To work on several things in one repo,
+ask the controller for another worktree session; do not create sessions from
+the app.
+
+Main session, in the repo directory:
 
 ```bash
-cmd="claude remote-control --spawn worktree --name $host-$repo"
+cmd="claude --remote-control $name"
 ```
 
-Single session for a one-off task, in its own worktree:
+Extra session, in its own worktree:
 
 ```bash
-cmd="claude --worktree $task --remote-control $host-$repo-$task"
+cmd="claude --worktree $task --remote-control $name"
 ```
 
 Check before starting: the path exists and is a git repo, and nothing with
 that name is running (`tmux list-windows -t "$where" -F '#W'`, or
-`tmux has-session -t "rc-$win"`). Starting twice creates a second, duplicate
+`tmux has-session -t "$win"`). Starting twice creates a second, duplicate
 remote session.
 
 See what runs: `tmux list-windows` / `tmux ls` for the processes on this
 host, `ListAgents` for the sessions on every host (this one included only
 when it is connected to Remote Control).
 
-Reattach after a crash or reboot: a repo server can be resumed for about four
-hours with `claude remote-control --continue` in the same directory;
-otherwise start it again. Interactive sessions resume with
-`claude --continue` / `claude --resume`.
+Reattach after a crash or reboot: sessions resume with `claude --continue` /
+`claude --resume` in the same directory (the worktree for an extra session).
 
 Status sweep, when the user asks what is going on: ask every peer with
 `SendMessage` for host, directory, task, progress, blocker and next step,
@@ -169,5 +178,3 @@ Check these the first time they matter and update this file:
 
 - Whether a session started inside detached tmux can have its permission
   prompts approved from the app.
-- Whether `--worktree` and `--remote-control` work together in one command.
-- How the app creates a new session on a `--spawn worktree` server.
