@@ -86,38 +86,63 @@ the user is sitting, and any of them can be off.
 
 ## Naming
 
-`<host>-<repo>[-<task>]`, for example `mbp-api`, `mbp-api-fix-auth`.
-tmux sessions: `rc-<repo>` for a repo server, `rc-<repo>-<task>` for a single
-session. The name is the only thing the session list shows, so it must say
-where and what.
+Remote session: `<host>-<repo>[-<task>]`, for example `mbp-api`,
+`mbp-api-fix-auth`. The name is the only thing the session list shows, so it
+must say where and what.
 
-## Operations
+tmux: `<repo>` for a repo server, `<repo>-<task>` for a single session. As a
+window in the controller's tmux session these names are enough; as a
+separate tmux session they get an `rc-` prefix so they do not clash with the
+user's own sessions.
 
-Start a repo server (the default for a fixed repo; new sessions are then
-created from the app and each gets its own worktree):
+## Where new sessions go
+
+The user's main interface is their own tmux session (for example `work`),
+and the controller usually runs as a window in it. So:
+
+- Controller inside tmux (`$TMUX` set): open each new session as a detached
+  window in the same tmux session, so it shows up in the user's window bar.
+- Controller not in tmux: open a separate detached tmux session.
 
 ```bash
 host=$(hostname -s); repo=<name>; path=<path from repos.md>
-tmux new-session -d -s "rc-$repo" -c "$path" \
-  ${CLAUDE_CONFIG_DIR:+-e CLAUDE_CONFIG_DIR="$CLAUDE_CONFIG_DIR"} \
-  "claude remote-control --spawn worktree --name $host-$repo"
+win=<repo or repo-task>; cmd=<claude command, see below>
+if [ -n "${TMUX:-}" ]; then
+  where=$(tmux display-message -p -t "$TMUX_PANE" '#S')
+  tmux new-window -d -t "$where:" -n "$win" -c "$path" \
+    ${CLAUDE_CONFIG_DIR:+-e CLAUDE_CONFIG_DIR="$CLAUDE_CONFIG_DIR"} "$cmd"
+else
+  tmux new-session -d -s "rc-$win" -c "$path" \
+    ${CLAUDE_CONFIG_DIR:+-e CLAUDE_CONFIG_DIR="$CLAUDE_CONFIG_DIR"} "$cmd"
+fi
 ```
 
-Start a single session for a one-off task, in its own worktree:
+`-d` keeps the user's current window in front. The window closes when
+`claude` exits.
+
+## Operations
+
+Repo server (for a fixed repo; new sessions are then created from the app and
+each gets its own worktree):
 
 ```bash
-tmux new-session -d -s "rc-$repo-$task" -c "$path" \
-  ${CLAUDE_CONFIG_DIR:+-e CLAUDE_CONFIG_DIR="$CLAUDE_CONFIG_DIR"} \
-  "claude --worktree $task --remote-control $host-$repo-$task"
+cmd="claude remote-control --spawn worktree --name $host-$repo"
 ```
 
-Check before starting: the path exists and is a git repo, and no tmux session
-with that name is running (`tmux has-session -t <name>`). Starting twice
-creates a second, duplicate remote session.
+Single session for a one-off task, in its own worktree:
 
-See what runs: `tmux ls` for the processes on this host, `ListAgents` for
-the sessions on every host (this one included only when it is connected to
-Remote Control).
+```bash
+cmd="claude --worktree $task --remote-control $host-$repo-$task"
+```
+
+Check before starting: the path exists and is a git repo, and nothing with
+that name is running (`tmux list-windows -t "$where" -F '#W'`, or
+`tmux has-session -t "rc-$win"`). Starting twice creates a second, duplicate
+remote session.
+
+See what runs: `tmux list-windows` / `tmux ls` for the processes on this
+host, `ListAgents` for the sessions on every host (this one included only
+when it is connected to Remote Control).
 
 Reattach after a crash or reboot: a repo server can be resumed for about four
 hours with `claude remote-control --continue` in the same directory;
