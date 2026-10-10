@@ -86,10 +86,12 @@ the user is sitting, and any of them can be off.
 ## Naming
 
 Every session the controller opens is named `_<host>-<repo>-<branch>`, and
-the same name is used for the remote session and for its tmux window (or tmux
-session, outside tmux). For example `_mbp-api-main`, `_mbp-api-fix-auth`.
-The remote name is the only thing the session list shows, so it must say
-where and what. The leading `_` marks it as opened by the controller and
+the same name is used for the remote session, the agent name in `ListAgents`
+and the tmux window (or tmux session, outside tmux). For example
+`_mbp-api-main`, `_mbp-api-fix-auth`. The remote name is the only thing the
+session list shows, so it must say where and what. The agent name is what
+`SendMessage` takes, so any session can message another by the name the user
+sees. The leading `_` marks it as opened by the controller and
 keeps it apart from the user's own windows and sessions.
 
 - Main session: `<branch>` is the branch checked out in the repo when the
@@ -137,14 +139,19 @@ the app.
 Main session, in the repo directory:
 
 ```bash
-cmd="claude --remote-control $name"
+cmd="claude -n $name --remote-control $name"
 ```
 
 Extra session, in its own worktree:
 
 ```bash
-cmd="claude --worktree $task --remote-control $name"
+cmd="claude -n $name --worktree $task --remote-control $name"
 ```
+
+`-n` sets the agent name. Without it, `ListAgents` shows an auto-generated
+name (for example `dotx-da`), not the remote name. For a session started
+without `-n`, map its `ListAgents` row to a tmux window with
+`tmux display-message -p -t <window id from the row> '#W'`.
 
 Check before starting: the path exists and is a git repo, and nothing with
 that name is running (`tmux list-windows -t "$where" -F '#W'`, or
@@ -165,7 +172,13 @@ Reattach after a crash or reboot: sessions resume with `claude --continue` /
 Status sweep, when the user asks what is going on: ask every peer with
 `SendMessage` for host, directory, task, progress, blocker and next step,
 wait for the replies, and give one table. Cloud sessions cannot reply; say so
-instead of waiting. Offline sessions are listed but not asked.
+instead of waiting. Offline sessions are listed but not asked. Status
+questions work between sessions on the same host, also when they run in
+different permission modes (verified).
+
+Waiting on a session on this host: `SendMessage` with `notify_when_idle: true`
+delivers one notice when it finishes its turn (verified). Use it instead of
+asking "are you done?" repeatedly.
 
 ## Worktrees isolate files, not resources
 
@@ -175,3 +188,10 @@ Lima VM names (`LIMA_INSTANCE` in dotx), and shared remote environments
 (a Kubernetes namespace, a test endpoint). Before starting a second session
 in a repo that runs services or tests, check that repo's CLAUDE.md for how it
 avoids those clashes, and tell the user if it says nothing.
+
+## Not verified yet
+
+Check these the first time they matter and update this file:
+
+- `-n` together with `--remote-control` in one command. `claude -n <name>`
+  alone is verified to make `ListAgents` show `<name>`.
