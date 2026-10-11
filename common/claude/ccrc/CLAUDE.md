@@ -56,7 +56,8 @@ the user is sitting, and any of them can be off.
 - Never stop a session, kill a tmux session or remove a worktree without
   asking first. Uncommitted work may be in it.
 - The controller never edits files in the project repos. Work happens in the
-  sessions it starts.
+  sessions it starts. Creating a worktree for a session it starts (see PR
+  review sessions) is a git operation, not an edit.
 
 ## Machine facts
 
@@ -98,6 +99,7 @@ keeps it apart from the user's own windows and sessions.
   session starts (`git -C "$path" branch --show-current`).
 - Worktree session: `<branch>` is the worktree name `<task>`. git names the
   branch `worktree-<task>`; drop that prefix.
+- PR review session: `<branch>` is `pr<N>`, for example `_mbp-api-pr424`.
 - Replace `/`, `.` and `:` with `-`; they break tmux targets.
 - The name is fixed at start. It does not follow a later branch switch.
 
@@ -148,9 +150,10 @@ Extra session, in its own worktree:
 cmd="claude -n $name --worktree $task --remote-control $name"
 ```
 
-`-n` sets the agent name. Without it, `ListAgents` shows an auto-generated
-name (for example `dotx-da`), not the remote name. For a session started
-without `-n`, map its `ListAgents` row to a tmux window with
+`-n` sets the agent name, also together with `--remote-control` (verified).
+Without it, `ListAgents` shows an auto-generated name (for example
+`dotx-da`), not the remote name. For a session started without `-n`, map
+its `ListAgents` row to a tmux window with
 `tmux display-message -p -t <window id from the row> '#W'`.
 
 Check before starting: the path exists and is a git repo, and nothing with
@@ -168,6 +171,14 @@ when it is connected to Remote Control).
 
 Reattach after a crash or reboot: sessions resume with `claude --continue` /
 `claude --resume` in the same directory (the worktree for an extra session).
+`--resume` keeps the session's stored name and ignores `-n` (verified), so
+send `/rename <name>` in its window after it starts. `claude --worktree
+<task> --resume <id>` resumes a conversation into a new worktree (verified).
+
+Exiting a `--worktree` session asks "Keep worktree / Remove worktree" and
+warns that commits will be lost, counted against the local default branch,
+which may be stale. Choose Keep, then remove the worktree with git once it
+is clean and its commits are in `origin/<default>`.
 
 Status sweep, when the user asks what is going on: ask every peer with
 `SendMessage` for host, directory, task, progress, blocker and next step,
@@ -180,6 +191,37 @@ Waiting on a session on this host: `SendMessage` with `notify_when_idle: true`
 delivers one notice when it finishes its turn (verified). Use it instead of
 asking "are you done?" repeatedly.
 
+## PR review sessions
+
+When the user gives a PR (number or URL) to review, open a session whose
+worktree is detached at the PR's head commit. Reviewing needs the PR's code,
+not its branch: a detached HEAD lets the session read, test and comment, and
+never clashes with another worktree that has the PR branch checked out.
+
+The controller creates the worktree itself instead of using `claude
+--worktree`, which always starts from the default branch and leaves an
+unused `worktree-<task>` branch behind. Match the PR's repository to a row in
+`repos.md`, name the session as in Naming, and start it in the worktree
+(`-c "$path/$wt"` in the tmux command of "Where new sessions go"):
+
+```bash
+cd "$path"; wt=.claude/worktrees/pr$N
+git fetch origin "pull/$N/head"
+git worktree add --detach "$wt" FETCH_HEAD
+cmd="claude -n $name --remote-control $name"
+```
+
+`.claude/worktrees/` is where `claude --worktree` puts its worktrees and is
+usually git-ignored. After starting, report the PR title, author and head
+commit.
+
+- New commits on the PR: the session runs `gh pr checkout <N> --detach`.
+- Pushing fixes to the PR: `git push origin HEAD:<pr-branch>`, or check out
+  the branch without `--detach`.
+- Closing, when the user says the PR is merged or done: confirm its state
+  with `gh pr view`, check that the worktree has no uncommitted changes, and
+  ask before exiting the session and running `git worktree remove "$wt"`.
+
 ## Worktrees isolate files, not resources
 
 Two sessions in the same repo do not overwrite each other's files, but they
@@ -188,10 +230,3 @@ Lima VM names (`LIMA_INSTANCE` in dotx), and shared remote environments
 (a Kubernetes namespace, a test endpoint). Before starting a second session
 in a repo that runs services or tests, check that repo's CLAUDE.md for how it
 avoids those clashes, and tell the user if it says nothing.
-
-## Not verified yet
-
-Check these the first time they matter and update this file:
-
-- `-n` together with `--remote-control` in one command. `claude -n <name>`
-  alone is verified to make `ListAgents` show `<name>`.
