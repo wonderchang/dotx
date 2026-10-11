@@ -24,7 +24,7 @@ next to it.
          │                               │                                 │
  ┌───────▼────────────────┐     ┌────────▼───────────────┐                 ┊
  │ host 1                 │     │ host 2                 │        host 3 … host N
- │ <hub>  <host>-ccrc     │     │ <hub>  <host>-ccrc     │        (same layout,
+ │ <hub>  ccrc-<host>     │     │ <hub>  ccrc-<host>     │        (same layout,
  │   │ starts / stops     │     │   │ starts / stops     │         joins or leaves
  │   ▼                    │     │   ▼                    │         at any time)
  │ repo A ─┬─ main        │     │ repo C ─┬─ main        │
@@ -100,6 +100,10 @@ keeps it apart from the user's own windows and sessions.
 - Worktree session: `<branch>` is the worktree name `<task>`. git names the
   branch `worktree-<task>`; drop that prefix.
 - PR review session: `<branch>` is `pr<N>`, for example `_mbp-api-pr424`.
+- The controller itself is `ccrc-<host>`, started in the hub with
+  `claude-work -n ccrc-<host> --remote-control ccrc-<host>`, so its
+  `ListAgents` name matches its remote name. It has no leading `_`: it is
+  not one of the sessions it opens.
 - Replace `/`, `.` and `:` with `-`; they break tmux targets.
 - The name is fixed at start. It does not follow a later branch switch.
 
